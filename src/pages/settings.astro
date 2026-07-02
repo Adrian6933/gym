@@ -1,0 +1,8 @@
+---
+import MobileLayout from '../layouts/MobileLayout.astro';
+import SettingsView from '../components/SettingsView.jsx';
+---
+
+<MobileLayout title="FitPulse — Ajustes">
+  <SettingsView client:only="react" />
+</MobileLayout>

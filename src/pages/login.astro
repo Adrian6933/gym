@@ -1,0 +1,8 @@
+---
+import MobileLayout from '../layouts/MobileLayout.astro';
+import GoogleLogin from '../components/GoogleLogin.jsx';
+---
+
+<MobileLayout title="FitPulse — Iniciar Sesión" hideNav={true}>
+  <GoogleLogin client:only="react" />
+</MobileLayout>

@@ -1,0 +1,8 @@
+---
+import MobileLayout from '../layouts/MobileLayout.astro';
+import HistoryView from '../components/HistoryView.jsx';
+---
+
+<MobileLayout title="FitPulse — Historial">
+  <HistoryView client:only="react" />
+</MobileLayout>

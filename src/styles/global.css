@@ -1,0 +1,669 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+@import "tailwindcss";
+
+:root {
+  --accent-color: #84cc16;
+  --accent-color-rgb: 132, 204, 22;
+  --accent-gradient-start: #84cc16;
+  --accent-gradient-end: #65a30d;
+
+  --bg-color: #0a0a0f;
+  --text-color: #f1f5f9;
+
+  /* Gradientes y Fondos Dinámicos de Contenedores */
+  --card-bg: linear-gradient(
+    135deg,
+    rgba(20, 20, 30, 0.95) 0%,
+    rgba(10, 10, 18, 0.98) 100%
+  );
+  --card-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(10, 10, 18, 0.92);
+  --card-lime-bg: linear-gradient(
+    135deg,
+    rgba(var(--accent-color-rgb), 0.14) 0%,
+    rgba(15, 15, 25, 0.98) 100%
+  );
+  --card-lime-border: rgba(var(--accent-color-rgb), 0.28);
+
+  --bar-track-bg: rgba(255, 255, 255, 0.04);
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+
+  /* Paleta Slate Variable (Modo Oscuro por Defecto) */
+  --bg-slate-955: #050508;
+  --bg-slate-950: #0a0a0f;
+  --bg-slate-900: #0f1015;
+  --bg-slate-850: #12131a;
+  --bg-slate-800: #181922;
+  --bg-slate-750: #1e202e;
+  --bg-slate-700: #24273a;
+  --bg-slate-650: #3b4252;
+  --bg-slate-600: #4c566a;
+  --bg-slate-550: #5e6b85;
+  --bg-slate-500: #7081a2;
+  --bg-slate-450: #8c9cb6;
+  --bg-slate-400: #9da9be;
+  --bg-slate-350: #b8c3d3;
+  --bg-slate-300: #cbd5e1;
+  --bg-slate-200: #e2e8f0;
+  --bg-slate-100: #f1f5f9;
+  --bg-slate-50: #f8fafc;
+}
+
+[data-theme-mode="light"] {
+  --bg-color: #eef2f6;
+  --text-color: #0f172a;
+
+  --card-bg: linear-gradient(
+    135deg,
+    rgba(var(--accent-color-rgb), 0.04) 0%,
+    #e2e8f0 100%
+  );
+  --card-border: rgba(var(--accent-color-rgb), 0.15);
+  --glass-bg: rgba(241, 245, 249, 0.85);
+  --card-lime-bg: linear-gradient(
+    135deg,
+    rgba(var(--accent-color-rgb), 0.12) 0%,
+    #e2e8f0 100%
+  );
+  --card-lime-border: rgba(var(--accent-color-rgb), 0.35);
+
+  --bar-track-bg: rgba(0, 0, 0, 0.08);
+  --card-shadow: 0 8px 30px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
+
+  /* Inversión Completa de la Paleta Slate para Modo Claro */
+  --bg-slate-955: #f8fafc;
+  --bg-slate-950: #f8fafc;
+  --bg-slate-900: #f1f5f9;
+  --bg-slate-850: #f1f5f9;
+  --bg-slate-800: #e2e8f0;
+  --bg-slate-750: #e2e8f0;
+  --bg-slate-700: #cbd5e1;
+  --bg-slate-650: #cbd5e1;
+  --bg-slate-600: #94a3b8;
+  --bg-slate-550: #64748b;
+  --bg-slate-500: #475569;
+  --bg-slate-450: #475569;
+  --bg-slate-400: #334155;
+  --bg-slate-350: #1e293b;
+  --bg-slate-300: #0f172a;
+  --bg-slate-200: #0f172a;
+  --bg-slate-100: #0f172a;
+}
+
+[data-theme-mode="amoled"] {
+  --bg-color: #000000;
+  --text-color: #f1f5f9;
+
+  --bg-slate-955: #000000;
+  --bg-slate-950: #000000;
+  --bg-slate-900: #040406;
+  --bg-slate-850: #08080c;
+  --bg-slate-800: #101014;
+  --bg-slate-750: #14141c;
+  --bg-slate-700: #1c1d28;
+
+  --card-bg: linear-gradient(
+    135deg,
+    rgba(8, 8, 12, 0.98) 0%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  --card-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(0, 0, 0, 0.9);
+  --card-lime-bg: linear-gradient(
+    135deg,
+    rgba(var(--accent-color-rgb), 0.06) 0%,
+    rgba(4, 4, 6, 0.98) 100%
+  );
+  --card-lime-border: rgba(var(--accent-color-rgb), 0.2);
+
+  --bar-track-bg: rgba(255, 255, 255, 0.02);
+  --card-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="cyan"] {
+  --accent-color: #06b6d4;
+  --accent-color-rgb: 6, 182, 212;
+  --accent-gradient-start: #06b6d4;
+  --accent-gradient-end: #0891b2;
+}
+
+[data-theme="rose"] {
+  --accent-color: #f43f5e;
+  --accent-color-rgb: 244, 63, 94;
+  --accent-gradient-start: #f43f5e;
+  --accent-gradient-end: #e11d48;
+}
+
+[data-theme="amber"] {
+  --accent-color: #f59e0b;
+  --accent-color-rgb: 245, 158, 11;
+  --accent-gradient-start: #f59e0b;
+  --accent-gradient-end: #d97706;
+}
+
+[data-theme="purple"] {
+  --accent-color: #a855f7;
+  --accent-color-rgb: 168, 85, 247;
+  --accent-gradient-start: #a855f7;
+  --accent-gradient-end: #9333ea;
+}
+
+[data-theme="volcano"] {
+  --accent-color: #f97316;
+  --accent-color-rgb: 249, 115, 22;
+  --accent-gradient-start: #f97316;
+  --accent-gradient-end: #ea580c;
+}
+
+[data-theme="cyberpunk"] {
+  --accent-color: #00f0ff;
+  --accent-color-rgb: 0, 240, 255;
+  --accent-gradient-start: #00f0ff;
+  --accent-gradient-end: #ff0055;
+}
+
+@theme {
+  --color-slate-955: var(--bg-slate-955);
+  --color-slate-950: var(--bg-slate-950);
+  --color-slate-900: var(--bg-slate-900);
+  --color-slate-850: var(--bg-slate-850);
+  --color-slate-800: var(--bg-slate-800);
+  --color-slate-750: var(--bg-slate-750);
+  --color-slate-700: var(--bg-slate-700);
+  --color-slate-650: var(--bg-slate-650);
+  --color-slate-600: var(--bg-slate-600);
+  --color-slate-550: var(--bg-slate-550);
+  --color-slate-500: var(--bg-slate-500);
+  --color-slate-450: var(--bg-slate-450);
+  --color-slate-400: var(--bg-slate-400);
+  --color-slate-350: var(--bg-slate-350);
+  --color-slate-300: var(--bg-slate-300);
+  --color-slate-200: var(--bg-slate-200);
+  --color-slate-100: var(--bg-slate-100);
+  --color-slate-5: var(--bg-slate-50);
+
+  --color-lime-400: var(--accent-gradient-start);
+  --color-lime-500: var(--accent-color);
+  --color-lime-600: var(--accent-gradient-end);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      sans-serif;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: pan-y;
+    min-height: 100dvh;
+  }
+
+  /* Ocultar scrollbar globalmente pero mantener scroll */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    scrollbar-width: none;
+  }
+
+  /* Inputs: evitar zoom en iOS */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ===== Ajustes de Temas para Modo Claro (v3.5) ===== */
+[data-theme-mode="light"] {
+  --accent-color: #5ea200; /* Lime más oscuro para lectura */
+  --accent-color-rgb: 94, 162, 0;
+  --accent-gradient-start: #65a30d;
+  --accent-gradient-end: #3f6200;
+}
+[data-theme-mode="light"][data-theme="cyan"] {
+  --accent-color: #0891b2;
+  --accent-color-rgb: 8, 145, 178;
+  --accent-gradient-start: #06b6d4;
+  --accent-gradient-end: #0369a1;
+}
+[data-theme-mode="light"][data-theme="rose"] {
+  --accent-color: #db2777;
+  --accent-color-rgb: 219, 39, 119;
+  --accent-gradient-start: #f43f5e;
+  --accent-gradient-end: #be123c;
+}
+[data-theme-mode="light"][data-theme="amber"] {
+  --accent-color: #ca8a04;
+  --accent-color-rgb: 202, 138, 4;
+  --accent-gradient-start: #eab308;
+  --accent-gradient-end: #854d0e;
+}
+[data-theme-mode="light"][data-theme="purple"] {
+  --accent-color: #7c3aed;
+  --accent-color-rgb: 124, 58, 237;
+  --accent-gradient-start: #a855f7;
+  --accent-gradient-end: #6d28d9;
+}
+
+[data-theme-mode="light"][data-theme="volcano"] {
+  --accent-color: #c2410c;
+  --accent-color-rgb: 194, 65, 12;
+  --accent-gradient-start: #f97316;
+  --accent-gradient-end: #9a3412;
+}
+
+[data-theme-mode="light"][data-theme="cyberpunk"] {
+  --accent-color: #0891b2;
+  --accent-color-rgb: 8, 145, 178;
+  --accent-gradient-start: #06b6d4;
+  --accent-gradient-end: #db2777;
+}
+
+/* ===== Ajustes de Compatibilidad Base para Modo Claro ===== */
+[data-theme-mode="light"] input,
+[data-theme-mode="light"] select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+[data-theme-mode="light"] text {
+  fill: #475569 !important;
+}
+
+[data-theme-mode="light"] circle[fill="none"] {
+  stroke: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ===== Animaciones Premium ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--accent-color-rgb), 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px rgba(var(--accent-color-rgb), 0.2);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes countdownPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ringProgress {
+  from {
+    stroke-dashoffset: 283;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out both;
+}
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out both;
+}
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out both;
+}
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out both;
+}
+.animate-slide-up-sheet {
+  animation: slideUpSheet 0.35s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+.animate-countdown-pulse {
+  animation: countdownPulse 1s ease-in-out;
+}
+
+/* Stagger delays */
+.delay-1 {
+  animation-delay: 0.05s;
+}
+.delay-2 {
+  animation-delay: 0.1s;
+}
+.delay-3 {
+  animation-delay: 0.15s;
+}
+.delay-4 {
+  animation-delay: 0.2s;
+}
+.delay-5 {
+  animation-delay: 0.25s;
+}
+
+/* ===== Gradientes Premium Adaptables ===== */
+.gradient-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+}
+
+.gradient-card-lime {
+  background: var(--card-lime-bg);
+  border: 1px solid var(--card-lime-border);
+  box-shadow: var(--card-shadow);
+}
+
+.gradient-header {
+  background: linear-gradient(180deg, var(--bg-color) 0%, transparent 100%);
+}
+
+.gradient-lime-btn {
+  background: linear-gradient(
+    135deg,
+    var(--accent-gradient-start) 0%,
+    var(--accent-gradient-end) 100%
+  );
+}
+
+.gradient-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+}
+
+/* ===== Utilidades Mobile ===== */
+.safe-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+.safe-bottom {
+  padding-bottom: max(0rem, env(safe-area-inset-bottom));
+}
+
+.touch-target {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Haptic press feedback */
+.press-scale {
+  transition: transform 0.1s ease;
+}
+.press-scale:active {
+  transform: scale(0.96);
+}
+
+/* ===== Utilidades de Diseño Premium (v3.5) ===== */
+@keyframes firePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px #f97316);
+  }
+  50% {
+    transform: scale(1.12) translateY(-1px);
+    filter: drop-shadow(0 0 8px #ef4444);
+  }
+}
+.animate-fire-pulse {
+  animation: firePulse 1.5s ease-in-out infinite;
+}
+
+.neon-shadow {
+  box-shadow: 0 0 15px -2px rgba(var(--accent-color-rgb), 0.25);
+}
+
+.neon-border {
+  border: 1px solid rgba(var(--accent-color-rgb), 0.2) !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ===== Decoraciones de Fitness SVG Fondo ===== */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-12px) rotate(3deg); }
+  75% { transform: translateY(6px) rotate(-2deg); }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+.animate-float-delayed {
+  animation: float 8s ease-in-out 2s infinite;
+}
+.animate-float-slow {
+  animation: float 10s ease-in-out 1s infinite;
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spinSlow 20s linear infinite;
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 0.08; }
+  50% { opacity: 0.15; }
+}
+.animate-pulse-soft {
+  animation: pulseSoft 4s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(10px, -8px) rotate(2deg); }
+  66% { transform: translate(-5px, 6px) rotate(-1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+.animate-drift {
+  animation: drift 12s ease-in-out infinite;
+}
+
+/* Patrón de fondo de pesas/gimnasio en SVG */
+.bg-fitness-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Dumbbell SVG decorativo para fondos */
+.dumbbell-deco {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.04;
+  z-index: 0;
+}
+
+/* Fit pattern grid más denso */
+.bg-gym-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ===== Fondos Decorativos con Imágenes Full-Screen aplicados al <body> ===== */
+
+/* Todas las páginas tienen fondo por defecto (oscuro) */
+body {
+  background-color: var(--bg-color);
+}
+
+/* Imagen de fondo fija que cubre TODO el body (incluyendo padding-top y padding-bottom) */
+body.bg-page-gym,
+body.bg-page-weights,
+body.bg-page-stats,
+body.bg-page-settings {
+  background-color: var(--bg-color);
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+body.bg-page-gym {
+  background-image:
+    linear-gradient(rgba(10, 10, 15, 0.88), rgba(10, 10, 15, 0.88)),
+    url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=75');
+}
+
+body.bg-page-weights {
+  background-image:
+    linear-gradient(rgba(10, 10, 15, 0.88), rgba(10, 10, 15, 0.88)),
+    url('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=1600&q=75');
+}
+
+body.bg-page-stats {
+  background-image:
+    linear-gradient(rgba(10, 10, 15, 0.88), rgba(10, 10, 15, 0.88)),
+    url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1600&q=75');
+}
+
+body.bg-page-settings {
+  background-image:
+    linear-gradient(rgba(10, 10, 15, 0.88), rgba(10, 10, 15, 0.88)),
+    url('https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1600&q=75');
+}
+
+/* Las clases bg-hero-* internas ahora son no-op (el fondo está en el body) */
+.bg-hero-gym,
+.bg-hero-weights,
+.bg-hero-stats,
+.bg-hero-settings {
+  position: relative;
+  background: transparent;
+}
+
+/* Overlay oscuro para asegurar legibilidad sobre fondos */
+.bg-hero-overlay {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hace que las cards se vean más opacas para tapar bien los fondos */
+.card-solid {
+  background: var(--bg-color) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Variante más opaca para cards principales */
+.card-solid-lime {
+  background: var(--bg-color) !important;
+  border: 1px solid rgba(var(--accent-color-rgb), 0.15) !important;
+}
+
+/* Barra lateral decorativa con gradiente de acento */
+.accent-bar {
+  border-left: 3px solid;
+  border-image: linear-gradient(180deg, var(--accent-gradient-start), var(--accent-gradient-end)) 1;
+}
+
+/* Input focus states correctos para CSS variables */
+.input-accent {
+  transition: all 0.15s ease;
+}
+.input-accent:focus {
+  outline: none;
+  border-color: rgba(var(--accent-color-rgb), 0.55);
+  box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.15);
+}
