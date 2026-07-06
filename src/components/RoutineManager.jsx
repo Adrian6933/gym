@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useGymStore, getRoutineStats } from "../store/useGymStore";
-import { Play, Plus, Trash2, Edit3 } from "lucide-react";
+import { Play, Plus, Trash2, Edit3, Sparkles, X } from "lucide-react";
 import BottomNav from "./BottomNav";
 import RoutineEditor from "./RoutineEditor";
+import { ROUTINE_TEMPLATES } from "../data/routineTemplates";
 
 const ROUTINE_EMOJIS = [
   "🔥",
@@ -36,6 +37,18 @@ export default function RoutineManager() {
   const [newColor, setNewColor] = useState("#84cc16");
   const [editingRoutineId, setEditingRoutineId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+
+  useEffect(() => {
+    if (!showCreateForm && !showTemplates) return;
+    const handleKeyDown = (e) => {
+      if (e.key !== "Escape") return;
+      if (showCreateForm) setShowCreateForm(false);
+      else if (showTemplates) setShowTemplates(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showCreateForm, showTemplates]);
 
   const handleCreate = () => {
     if (!newName.trim()) return;
@@ -47,6 +60,16 @@ export default function RoutineManager() {
     });
     setNewName("");
     setShowCreateForm(false);
+  };
+
+  const handleUseTemplate = (template) => {
+    addRoutine({
+      name: template.name,
+      emoji: template.emoji,
+      color: template.color,
+      exercises: template.exercises.map((ex) => ({ ...ex })),
+    });
+    setShowTemplates(false);
   };
 
   const handleStartWorkout = (routine) => {
@@ -233,24 +256,39 @@ export default function RoutineManager() {
           })}
         </div>
 
-        {/* Add routine button */}
+        {/* Add routine buttons */}
         {!showCreateForm ? (
-          <button
-            onClick={() => setShowCreateForm(true)}
-            className="w-full py-5 border border-dashed border-slate-800 hover:border-lime-500/30 text-slate-500 hover:text-slate-400 rounded-3xl flex flex-col items-center justify-center gap-2 font-bold press-scale bg-slate-900/10"
-          >
-            <div className="w-12 h-12 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center text-lime-500 shadow-md">
-              <Plus size={20} />
-            </div>
-            <span className="text-xs uppercase tracking-wider">
-              Nueva Rutina
-            </span>
-          </button>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="py-5 border border-dashed border-slate-800 hover:border-lime-500/30 text-slate-500 hover:text-slate-400 rounded-3xl flex flex-col items-center justify-center gap-2 font-bold press-scale bg-slate-900/10"
+            >
+              <div className="w-12 h-12 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center text-lime-500 shadow-md">
+                <Plus size={20} />
+              </div>
+              <span className="text-xs uppercase tracking-wider">
+                Nueva Rutina
+              </span>
+            </button>
+            <button
+              onClick={() => setShowTemplates(true)}
+              className="py-5 border border-dashed border-slate-800 hover:border-cyan-500/30 text-slate-500 hover:text-slate-400 rounded-3xl flex flex-col items-center justify-center gap-2 font-bold press-scale bg-slate-900/10"
+            >
+              <div className="w-12 h-12 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center text-cyan-500 shadow-md">
+                <Sparkles size={20} />
+              </div>
+              <span className="text-xs uppercase tracking-wider">
+                Usar Plantilla
+              </span>
+            </button>
+          </div>
         ) : (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
           <div
             className="fixed inset-0 bg-slate-800/40 backdrop-blur-md flex items-end justify-center z-[100] animate-fade-in"
             onClick={() => setShowCreateForm(false)}
           >
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
             <div
               className="w-full max-w-md bg-slate-900 border-t border-slate-800 rounded-t-[2.5rem] p-6 space-y-5 animate-slide-up-sheet safe-bottom"
               onClick={(e) => e.stopPropagation()}
@@ -273,6 +311,7 @@ export default function RoutineManager() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-3.5 px-4 text-slate-100 focus:outline-none focus:border-lime-500/50 text-sm"
+                // eslint-disable-next-line jsx-a11y/no-autofocus -- foco correcto al abrir el sheet por acción explícita del usuario (patrón WAI-ARIA recomendado para diálogos)
                 autoFocus
               />
 
@@ -339,6 +378,58 @@ export default function RoutineManager() {
           </div>
         )}
       </div>
+
+      {showTemplates && (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
+        <div
+          className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-end justify-center animate-fade-in"
+          onClick={() => setShowTemplates(false)}
+        >
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
+          <div
+            className="w-full max-w-md bg-slate-900 border-t border-slate-800 rounded-t-[2.5rem] p-6 space-y-4 animate-slide-up-sheet safe-bottom max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-black text-slate-100 tracking-tight">
+                Plantillas de Rutina
+              </h3>
+              <button
+                onClick={() => setShowTemplates(false)}
+                className="w-9 h-9 flex items-center justify-center bg-slate-800/80 rounded-full text-slate-400 active:scale-90 transition-transform"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-2.5">
+              {ROUTINE_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.name}
+                  onClick={() => handleUseTemplate(tpl)}
+                  className="w-full gradient-card p-4 rounded-2xl flex items-center gap-3.5 press-scale text-left"
+                >
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                    style={{ backgroundColor: `${tpl.color}15` }}
+                  >
+                    {tpl.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-bold text-slate-200 truncate">
+                      {tpl.name}
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      {tpl.exercises.length} ejercicios
+                    </p>
+                  </div>
+                  <Plus size={16} className="text-lime-500 flex-shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <BottomNav />
     </>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { create } from "zustand";
 import { CheckCircle2, Flame, Trophy, Zap, Info, X } from "lucide-react";
 
@@ -106,6 +106,7 @@ function ToastItem({ toast, onDismiss }) {
       </div>
       <button
         onClick={onDismiss}
+        aria-label="Cerrar notificación"
         className="text-slate-600 hover:text-slate-400 transition-colors flex-shrink-0"
       >
         <X size={14} />
@@ -121,7 +122,12 @@ export default function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[200] safe-top px-3 pt-2 flex flex-col items-center gap-2 pointer-events-none">
+    <div
+      className="fixed top-0 left-0 right-0 z-[200] safe-top px-3 pt-2 flex flex-col items-center gap-2 pointer-events-none"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onDismiss={() => dismiss(toast.id)} />
       ))}

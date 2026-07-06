@@ -23,7 +23,6 @@ export default function RoutineEditor({ routineId, onBack }) {
     addExerciseToRoutine,
     removeExerciseFromRoutine,
     updateExerciseInRoutine,
-    updateRoutine,
     settings,
   } = useGymStore();
   const routine = routines.find((r) => r.id === routineId);
@@ -190,9 +189,9 @@ export default function RoutineEditor({ routineId, onBack }) {
                   <div className="px-4 pb-4 pt-1 space-y-3 animate-scale-in border-t border-slate-800/40">
                     {/* Sets */}
                     <div className="flex items-center justify-between">
-                      <label className="text-xs text-slate-400 font-medium">
+                      <span className="text-xs text-slate-400 font-medium">
                         Series
-                      </label>
+                      </span>
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() =>
@@ -223,9 +222,9 @@ export default function RoutineEditor({ routineId, onBack }) {
                     {/* Reps or Duration */}
                     {ex.type === "reps" ? (
                       <div className="flex items-center justify-between">
-                        <label className="text-xs text-slate-400 font-medium">
+                        <span className="text-xs text-slate-400 font-medium">
                           Repeticiones
-                        </label>
+                        </span>
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() =>
@@ -257,9 +256,9 @@ export default function RoutineEditor({ routineId, onBack }) {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">
-                        <label className="text-xs text-slate-400 font-medium">
+                        <span className="text-xs text-slate-400 font-medium">
                           Duración (s)
-                        </label>
+                        </span>
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() =>
@@ -293,10 +292,14 @@ export default function RoutineEditor({ routineId, onBack }) {
 
                     {/* Weight */}
                     <div className="flex items-center justify-between">
-                      <label className="text-xs text-slate-400 font-medium">
+                      <label
+                        htmlFor={`routine-weight-${ex.id}`}
+                        className="text-xs text-slate-400 font-medium"
+                      >
                         Peso (kg)
                       </label>
                       <input
+                        id={`routine-weight-${ex.id}`}
                         type="text"
                         inputMode="decimal"
                         value={ex.targetWeight || ""}
@@ -312,9 +315,9 @@ export default function RoutineEditor({ routineId, onBack }) {
 
                     {/* Type toggle */}
                     <div className="flex items-center justify-between">
-                      <label className="text-xs text-slate-400 font-medium">
+                      <span className="text-xs text-slate-400 font-medium">
                         Tipo
-                      </label>
+                      </span>
                       <div className="flex bg-slate-800 rounded-lg overflow-hidden">
                         <button
                           onClick={() =>

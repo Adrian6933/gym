@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useGymStore } from "../store/useGymStore";
 import {
   LogOut,
@@ -10,12 +10,51 @@ import {
   Palette,
   Target,
   Dumbbell,
+  Download,
 } from "lucide-react";
 import BottomNav from "./BottomNav";
+import ConfirmDialog from "./ConfirmDialog";
+import { useToast } from "./Toast";
 
 export default function SettingsView() {
-  const { settings, updateSettings, user, logout, clearHistory, userLevel, userExp } =
-    useGymStore();
+  const {
+    settings,
+    updateSettings,
+    user,
+    logout,
+    userLevel,
+    userExp,
+    history,
+    routines,
+    personalRecords,
+    bodyMetrics,
+  } = useGymStore();
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
+  const toast = useToast();
+
+  const handleExportData = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      version: 1,
+      settings,
+      history,
+      routines,
+      personalRecords,
+      bodyMetrics,
+      userLevel,
+      userExp,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `fitpulse-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Exportado", "Tus datos se han descargado como JSON");
+  };
 
   const THEMES = [
     { id: "lime", color: "#84cc16", name: "Lime Pulse" },
@@ -42,12 +81,8 @@ export default function SettingsView() {
   };
 
   const handleClearAll = () => {
-    if (
-      confirm("¿Eliminar todos los datos? Esta acción no se puede deshacer.")
-    ) {
-      localStorage.removeItem("fitpulse-storage");
-      window.location.href = "/login";
-    }
+    localStorage.removeItem("fitpulse-storage");
+    window.location.href = "/login";
   };
 
   return (
@@ -466,6 +501,13 @@ export default function SettingsView() {
           <h3 className="text-sm font-bold text-slate-200">Cuenta</h3>
 
           <button
+            onClick={handleExportData}
+            className="w-full py-3.5 rounded-xl bg-slate-800/80 text-slate-300 font-semibold flex items-center justify-center gap-2 press-scale text-sm"
+          >
+            <Download size={16} /> Exportar mis datos (JSON)
+          </button>
+
+          <button
             onClick={handleLogout}
             className="w-full py-3.5 rounded-xl bg-slate-800/80 text-slate-300 font-semibold flex items-center justify-center gap-2 press-scale text-sm"
           >
@@ -473,7 +515,7 @@ export default function SettingsView() {
           </button>
 
           <button
-            onClick={handleClearAll}
+            onClick={() => setConfirmClearAll(true)}
             className="w-full py-3.5 rounded-xl bg-red-500/10 text-red-400 font-semibold flex items-center justify-center gap-2 press-scale text-sm"
           >
             <Trash2 size={16} /> Borrar todos los datos
@@ -489,6 +531,16 @@ export default function SettingsView() {
         </div>
       </div>
       <BottomNav />
+      <ConfirmDialog
+        open={confirmClearAll}
+        title="¿Eliminar todos los datos?"
+        message="Esta acción no se puede deshacer. Se borrará todo tu progreso local."
+        onConfirm={() => {
+          handleClearAll();
+          setConfirmClearAll(false);
+        }}
+        onCancel={() => setConfirmClearAll(false)}
+      />
     </>
   );
 }

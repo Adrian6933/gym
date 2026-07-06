@@ -35,6 +35,15 @@ export default function HomeView() {
   const { activeWorkout, history, settings, updateSettings, routines, weeklySchedule, setWeeklySchedule, startWorkout, userLevel } = useGymStore();
   const [selectedDayIndex, setSelectedDayIndex] = React.useState(null);
 
+  React.useEffect(() => {
+    if (selectedDayIndex === null) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setSelectedDayIndex(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedDayIndex]);
+
   const streak = calculateStreak(history);
   const recordStreak = calculateRecordStreak(history);
   const consistency = getWeeklyConsistency(history);
@@ -89,7 +98,7 @@ export default function HomeView() {
               </span>
             </div>
             <p className="text-xs text-slate-400 font-medium italic pl-1.5 mt-1.5">
-              "{quote}"
+              &ldquo;{quote}&rdquo;
             </p>
           </div>
           {/* Toggle Button */}
@@ -204,9 +213,19 @@ export default function HomeView() {
               const isToday = todayIndex === idx;
 
               return (
+                // Div (no button) porque contiene un <button> "Entrenar" anidado;
+                // el rol+teclado propio evita anidar elementos interactivos inválidos.
                 <div
                   key={idx}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setSelectedDayIndex(idx)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedDayIndex(idx);
+                    }
+                  }}
                   className={`flex items-center justify-between py-2.5 px-3.5 rounded-xl border transition-all cursor-pointer ${
                     isToday
                       ? "bg-slate-950/40 border-lime-500/25 hover:border-lime-500/40 shadow-sm"
@@ -233,6 +252,7 @@ export default function HomeView() {
                     )}
                   </div>
 
+                  {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real (evita reabrir el modal al pulsar el botón/chevron internos) */}
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     {routine && isToday && (
                       <button
@@ -255,10 +275,12 @@ export default function HomeView() {
 
         {/* Selector de Rutina para el Planificador */}
         {selectedDayIndex !== null && (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
           <div
             className="fixed inset-0 bg-slate-800/40 backdrop-blur-md flex items-end justify-center z-[100] animate-fade-in"
             onClick={() => setSelectedDayIndex(null)}
           >
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
             <div
               className="w-full max-w-md bg-slate-900 border-t border-slate-800 rounded-t-[2.5rem] p-6 space-y-5 animate-slide-up-sheet safe-bottom"
               onClick={(e) => e.stopPropagation()}

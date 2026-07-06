@@ -2,14 +2,22 @@
 import '../styles/global.css';
 import AppInitializer from '../components/AppInitializer.jsx';
 import Toast from '../components/Toast.jsx';
+import OfflineIndicator from '../components/OfflineIndicator.jsx';
 
 interface Props {
   title: string;
   hideNav?: boolean;
+  description?: string;
 }
 
-const { title, hideNav = false } = Astro.props;
+const {
+  title,
+  hideNav = false,
+  description = 'FitPulse — Tu entrenador personal de bolsillo. Gestiona rutinas, sigue tu progreso y alcanza tus metas.',
+} = Astro.props;
 const path = Astro.url.pathname;
+const canonicalURL = new URL(path, Astro.site);
+const ogImageURL = new URL('/og-image.png', Astro.site);
 let bgClass = 'bg-page-gym';
 if (path === '/workout') bgClass = 'bg-page-weights';
 else if (path === '/stats') bgClass = 'bg-page-stats';
@@ -21,22 +29,53 @@ else if (path === '/history') bgClass = 'bg-page-stats';
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="FitPulse — Tu entrenador personal de bolsillo. Gestiona rutinas, sigue tu progreso y alcanza tus metas." />
+    <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0a0f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FitPulse" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="generator" content={Astro.generator} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FitPulse" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
 
     <title>{title}</title>
   </head>
   <body class={`min-h-[100dvh] flex flex-col ${hideNav ? '' : 'pb-24'} ${bgClass}`}>
     <AppInitializer client:only="react" />
     <Toast client:only="react" />
+    <OfflineIndicator client:only="react" />
     <main class={`flex-1 w-full relative overflow-x-hidden ${hideNav ? '' : 'safe-top'}`}>
       <slot />
     </main>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.error('SW registration failed:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

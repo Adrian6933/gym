@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { X, Plus, TrendingDown, TrendingUp, Minus, Scale, Ruler, Trash2, Calendar } from "lucide-react";
 import { useGymStore } from "../store/useGymStore";
+import ConfirmDialog from "./ConfirmDialog";
 
 const FIELDS = [
   { key: "weight", label: "Peso", unit: "kg", icon: Scale, color: "#84cc16" },
@@ -180,17 +181,30 @@ export default function BodyMetrics({ isOpen, onClose }) {
     setShowForm(false);
   };
 
-  const handleDelete = (id) => {
-    if (confirm("¿Eliminar esta medición?")) deleteBodyMetric(id);
-  };
+  const [deleteId, setDeleteId] = useState(null);
+  const handleDelete = (id) => setDeleteId(id);
+
+  // Equivalente por teclado del cierre por click en el backdrop
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key !== "Escape") return;
+      if (showForm) setShowForm(false);
+      else onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, showForm, onClose]);
 
   if (!isOpen) return null;
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
     <div
       className="fixed inset-0 z-[150] flex flex-col bg-[#0a0a0f] animate-fade-in"
       onClick={onClose}
     >
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
       <div
         className="relative flex-1 overflow-y-auto animate-slide-up-sheet"
         onClick={(e) => e.stopPropagation()}
@@ -297,11 +311,13 @@ export default function BodyMetrics({ isOpen, onClose }) {
 
       {/* Form Sheet */}
       {showForm && (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
         <div
           className="fixed inset-0 z-[200] flex items-end justify-center animate-fade-in"
           onClick={() => setShowForm(false)}
         >
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
           <div
             className="relative w-full max-w-md bg-slate-900 rounded-t-[2.5rem] p-6 pb-8 animate-slide-up-sheet safe-bottom shadow-[0_-20px_60px_rgba(0,0,0,0.6)] max-h-[90vh] overflow-y-auto no-scrollbar"
             onClick={(e) => e.stopPropagation()}
@@ -334,12 +350,14 @@ export default function BodyMetrics({ isOpen, onClose }) {
                   className="bg-slate-950/50 rounded-xl p-3 border border-white/5"
                 >
                   <label
+                    htmlFor={`metric-${f.key}`}
                     className="text-[10px] font-bold uppercase tracking-wider block mb-1.5"
                     style={{ color: f.color }}
                   >
                     {f.label} ({f.unit})
                   </label>
                   <input
+                    id={`metric-${f.key}`}
                     type="number"
                     step="0.1"
                     value={form[f.key]}
@@ -352,10 +370,14 @@ export default function BodyMetrics({ isOpen, onClose }) {
                 </div>
               ))}
               <div className="bg-slate-950/50 rounded-xl p-3 border border-white/5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                <label
+                  htmlFor="metric-notes"
+                  className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5"
+                >
                   Notas (opcional)
                 </label>
                 <textarea
+                  id="metric-notes"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   placeholder="Cómo te sentías, momento del día, etc."
@@ -374,6 +396,15 @@ export default function BodyMetrics({ isOpen, onClose }) {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="¿Eliminar esta medición?"
+        onConfirm={() => {
+          deleteBodyMetric(deleteId);
+          setDeleteId(null);
+        }}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   );
 }

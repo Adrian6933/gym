@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /login
+Disallow: /workout
+Disallow: /stats
+Disallow: /history
+Disallow: /settings
+
+Sitemap: https://fitpulse.app/sitemap-index.xml

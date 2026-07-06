@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Clock, Dumbbell, Flame, Trophy, Zap, X, TrendingUp } from "lucide-react";
+import { Clock, Dumbbell, Flame, Trophy, Zap, TrendingUp } from "lucide-react";
 
 // Confeti en canvas para celebrar el final del entreno
 function CelebrationConfetti({ active }) {
@@ -105,6 +105,15 @@ export default function WorkoutSummarySheet({
   summary,
   onClose,
 }) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !summary) return null;
 
   const {
@@ -134,6 +143,7 @@ export default function WorkoutSummarySheet({
 
       <div className="fixed inset-0 z-[250] flex items-end justify-center animate-fade-in">
         {/* Backdrop */}
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba) */}
         <div
           className="absolute inset-0 bg-black/70 backdrop-blur-md"
           onClick={onClose}

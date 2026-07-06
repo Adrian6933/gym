@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, X, Plus, Clock, Repeat, TrendingUp } from "lucide-react";
 import { EXERCISE_DB, MUSCLE_GROUPS, MUSCLE_COLORS } from "../data/exercises";
 import ExerciseHistory from "./ExerciseHistory";
@@ -11,6 +11,15 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
   const [customMuscle, setCustomMuscle] = useState("Pecho");
   const [customType, setCustomType] = useState("reps");
   const [historyExercise, setHistoryExercise] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -34,6 +43,7 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
   };
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
     <div
       className="fixed inset-0 z-[100] flex flex-col animate-fade-in"
       onClick={onClose}
@@ -43,6 +53,7 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
 
       {/* Sheet */}
       <div className="flex-1" />
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
       <div
         className="relative bg-slate-900 rounded-t-[1.75rem] flex flex-col h-[92vh] animate-slide-up-sheet shadow-[0_-20px_60px_rgba(0,0,0,0.6)]"
         onClick={(e) => e.stopPropagation()}
@@ -113,23 +124,33 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
                 }}
                 className="flex items-center gap-3.5 flex-1 min-w-0 press-scale text-left"
               >
-                {/* SVG Icon */}
+                {/* Foto o icono SVG */}
                 <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
                   style={{ backgroundColor: `${MUSCLE_COLORS[ex.muscle]}15` }}
                 >
-                  <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={MUSCLE_COLORS[ex.muscle]}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d={ex.icon} />
-                  </svg>
+                  {ex.image ? (
+                    <img
+                      src={ex.image}
+                      alt={ex.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={MUSCLE_COLORS[ex.muscle]}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d={ex.icon} />
+                    </svg>
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">

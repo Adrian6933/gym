@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useGymStore, getExerciseCalories } from "../store/useGymStore";
 import {
   Check,
@@ -6,17 +6,16 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
-  Clock,
   Play,
   Pause,
   RotateCcw,
 } from "lucide-react";
 import Timer from "./Timer";
 import ExerciseSelector from "./ExerciseSelector";
-import BottomNav from "./BottomNav";
 import RoutineManager from "./RoutineManager";
 import WorkoutSummarySheet from "./WorkoutSummarySheet";
 import OneRMCalculator from "./OneRMCalculator";
+import ConfirmDialog from "./ConfirmDialog";
 import { useToast } from "./Toast";
 import { MUSCLE_COLORS, MUSCLE_IMAGES } from "../data/exercises";
 
@@ -99,7 +98,7 @@ function ExerciseTimerMode({ exercise, exerciseIndex }) {
     }
     const t = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearTimeout(t);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, set.completed, exerciseIndex, toggleSetComplete]);
 
   const reset = () => {
     setTimeLeft(duration);
@@ -196,6 +195,22 @@ function ExerciseTimerMode({ exercise, exerciseIndex }) {
   );
 }
 
+// Filtra a solo dígitos + un punto decimal, con tope razonable para evitar
+// NaN o valores absurdos que rompan volumen/calorías en stats.
+function sanitizeNumericInput(value, { maxValue = 999, allowDecimal = true } = {}) {
+  let cleaned = allowDecimal
+    ? value.replace(/[^0-9.]/g, "")
+    : value.replace(/[^0-9]/g, "");
+  const firstDot = cleaned.indexOf(".");
+  if (firstDot !== -1) {
+    cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+  }
+  if (cleaned !== "" && cleaned !== "." && parseFloat(cleaned) > maxValue) {
+    cleaned = String(maxValue);
+  }
+  return cleaned;
+}
+
 function ExerciseRepsMode({
   exercise,
   exerciseIndex,
@@ -204,10 +219,11 @@ function ExerciseRepsMode({
   onPrBeaten,
 }) {
   const { addSet, removeSet, updateSet, toggleSetComplete, settings, personalRecords } = useGymStore();
+  const [expPopup, setExpPopup] = useState(null);
 
   const handleCheck = (setIdx) => {
     const set = exercise.sets[setIdx];
-    
+
     // Si la serie está sugerida y no se ha modificado, usamos los valores sugeridos al completarla
     if (set.isSuggested && !set.completed) {
       if (!set.weight && exercise.targetWeight) updateSet(exerciseIndex, setIdx, "weight", String(exercise.targetWeight));
@@ -215,9 +231,15 @@ function ExerciseRepsMode({
     }
 
     toggleSetComplete(exerciseIndex, setIdx);
-    
+
     const isNowCompleted = !set.completed;
     if (isNowCompleted) {
+      if (navigator.vibrate) navigator.vibrate(30);
+      const popupKey = Date.now();
+      setExpPopup({ setIdx, key: popupKey });
+      setTimeout(() => {
+        setExpPopup((current) => (current?.key === popupKey ? null : current));
+      }, 1000);
       if (onSetComplete) onSetComplete();
 
       // Comprobar PR
@@ -237,6 +259,23 @@ function ExerciseRepsMode({
 
   const showRpe = settings?.enableRpeRir;
 
+  const SET_TYPE_CYCLE = ["normal", "warmup", "dropset", "failure"];
+  const SET_TYPE_BADGE = {
+    normal: null,
+    warmup: { label: "W", color: "#f59e0b" },
+    dropset: { label: "D", color: "#a855f7" },
+    failure: { label: "F", color: "#ef4444" },
+  };
+
+  const handleCycleSetType = (setIdx) => {
+    const current = exercise.sets[setIdx].setType || "normal";
+    const next =
+      SET_TYPE_CYCLE[
+        (SET_TYPE_CYCLE.indexOf(current) + 1) % SET_TYPE_CYCLE.length
+      ];
+    updateSet(exerciseIndex, setIdx, "setType", next === "normal" ? undefined : next);
+  };
+
   return (
     <div className="space-y-2 animate-fade-in relative z-10">
       {/* Table header */}
@@ -255,9 +294,23 @@ function ExerciseRepsMode({
           className={`flex items-center gap-1.5 px-2 py-1 rounded-xl transition-colors ${set.completed ? "bg-lime-500/5" : ""}`}
         >
           <div className="w-9 flex justify-center">
-            <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-800/80 text-[11px] font-bold text-slate-450">
-              {setIdx + 1}
-            </span>
+            <button
+              type="button"
+              onClick={() => handleCycleSetType(setIdx)}
+              disabled={set.completed}
+              title="Toca para marcar como calentamiento / dropset / al fallo"
+              className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-800/80 text-[11px] font-bold text-slate-450 disabled:opacity-60 press-scale"
+              style={
+                SET_TYPE_BADGE[set.setType || "normal"]
+                  ? {
+                      backgroundColor: `${SET_TYPE_BADGE[set.setType].color}20`,
+                      color: SET_TYPE_BADGE[set.setType].color,
+                    }
+                  : undefined
+              }
+            >
+              {SET_TYPE_BADGE[set.setType || "normal"]?.label || setIdx + 1}
+            </button>
           </div>
 
           {/* Kg Input with Plate Calculator trigger */}
@@ -268,7 +321,12 @@ function ExerciseRepsMode({
               placeholder={String(exercise.targetWeight || "-")}
               value={set.weight}
               onChange={(e) =>
-                updateSet(exerciseIndex, setIdx, "weight", e.target.value)
+                updateSet(
+                  exerciseIndex,
+                  setIdx,
+                  "weight",
+                  sanitizeNumericInput(e.target.value, { maxValue: 999 }),
+                )
               }
               disabled={set.completed}
               className={`w-full bg-slate-900/85 border border-slate-800 text-center text-lg font-bold py-3 pr-8 rounded-xl focus:outline-none focus:border-lime-500/60 focus:ring-1 focus:ring-lime-500/30 disabled:opacity-40 transition-all placeholder:text-slate-700 ${
@@ -312,7 +370,12 @@ function ExerciseRepsMode({
               placeholder={String(exercise.targetReps || "-")}
               value={set.reps}
               onChange={(e) =>
-                updateSet(exerciseIndex, setIdx, "reps", e.target.value)
+                updateSet(
+                  exerciseIndex,
+                  setIdx,
+                  "reps",
+                  sanitizeNumericInput(e.target.value, { maxValue: 300, allowDecimal: false }),
+                )
               }
               disabled={set.completed}
               className={`w-full bg-slate-900/85 border border-slate-800 text-center text-lg font-bold py-3 rounded-xl focus:outline-none focus:border-lime-500/60 focus:ring-1 focus:ring-lime-500/30 disabled:opacity-40 transition-all placeholder:text-slate-700 ${
@@ -346,7 +409,7 @@ function ExerciseRepsMode({
             </div>
           )}
 
-          <div className="w-[3.5rem] flex justify-center">
+          <div className="w-[3.5rem] flex justify-center relative">
             <button
               onClick={() => handleCheck(setIdx)}
               className={`w-[2.75rem] h-[2.75rem] flex items-center justify-center rounded-xl transition-all active:scale-90 ${
@@ -357,6 +420,14 @@ function ExerciseRepsMode({
             >
               <Check size={22} strokeWidth={set.completed ? 3.5 : 2} />
             </button>
+            {expPopup?.setIdx === setIdx && (
+              <span
+                key={expPopup.key}
+                className="absolute -top-1 left-1/2 -translate-x-1/2 text-[11px] font-black text-lime-400 pointer-events-none animate-float-up-fade"
+              >
+                +10 EXP
+              </span>
+            )}
           </div>
         </div>
       ))}
@@ -385,6 +456,15 @@ function ExerciseRepsMode({
 function PlateCalculatorModal({ isOpen, initialWeight, onClose }) {
   const [weight, setWeight] = useState(parseFloat(initialWeight) || 60);
   const [barWeight, setBarWeight] = useState(20);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -429,11 +509,13 @@ function PlateCalculatorModal({ isOpen, initialWeight, onClose }) {
   };
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md" />
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
       <div
         className="relative z-10 w-full max-w-sm bg-slate-900 border border-white/10 rounded-[2rem] p-6 space-y-5 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
@@ -453,11 +535,15 @@ function PlateCalculatorModal({ isOpen, initialWeight, onClose }) {
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">
+              <label
+                htmlFor="plate-calc-weight"
+                className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1"
+              >
                 Peso Objetivo (Total)
               </label>
               <div className="flex items-center gap-2">
                 <input
+                  id="plate-calc-weight"
                   type="number"
                   step="0.5"
                   value={weight || ""}
@@ -470,9 +556,9 @@ function PlateCalculatorModal({ isOpen, initialWeight, onClose }) {
           </div>
 
           <div>
-            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">
               Peso de la Barra
-            </label>
+            </span>
             <div className="flex gap-2">
               {[20, 15, 10, 8].map((w) => (
                 <button
@@ -491,9 +577,9 @@ function PlateCalculatorModal({ isOpen, initialWeight, onClose }) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
               Distribución (Un lado)
-            </label>
+            </span>
             {plates.length === 0 ? (
               <div className="py-8 bg-slate-950/30 rounded-2xl border border-slate-800/80 flex items-center justify-center text-slate-550 text-xs font-semibold">
                 {weight <= barWeight
@@ -563,12 +649,18 @@ export default function WorkoutActive() {
     finishWorkout,
     cancelWorkout,
     startWorkout,
+    updateExerciseNotes,
     settings,
   } = useGymStore();
   const [timerActive, setTimerActive] = useState(false);
+  const [timerKey, setTimerKey] = useState(0);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [prTrigger, setPrTrigger] = useState(0);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+
+  // Referencia estable para que el useEffect del Timer no reciba un callback nuevo en cada render
+  const handleTimerDone = useCallback(() => setTimerActive(false), []);
 
   // Plate Calculator state
   const [calcOpen, setCalcOpen] = useState(false);
@@ -590,6 +682,10 @@ export default function WorkoutActive() {
       1000,
     );
     return () => clearInterval(t);
+    // Solo depende de startTime (fijo durante todo el entrenamiento): meter
+    // el objeto activeWorkout completo reiniciaría el intervalo en cada
+    // actualización del store (cada serie marcada), causando saltos en el contador.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWorkout?.startTime]);
 
   if (!activeWorkout) {
@@ -620,8 +716,8 @@ export default function WorkoutActive() {
   }, 0);
 
   const handleSetComplete = () => {
-    setTimerActive(false);
-    setTimeout(() => setTimerActive(true), 50);
+    setTimerKey((k) => k + 1);
+    setTimerActive(true);
   };
 
   const handleOpenCalculator = (initialWeight) => {
@@ -690,7 +786,7 @@ export default function WorkoutActive() {
       weight: String(s.weight),
       duration: "",
       completed: false,
-      isWarmup: true,
+      setType: "warmup",
     }));
     ex.sets = [...warmupObjs, ...ex.sets];
     const updatedWorkout = {
@@ -790,10 +886,11 @@ export default function WorkoutActive() {
       <PRConfetti trigger={prTrigger} />
 
       <Timer
+        key={timerKey}
         isActive={timerActive}
         durationSeconds={settings?.restDuration || 90}
         onClose={() => setTimerActive(false)}
-        onComplete={() => setTimerActive(false)}
+        onComplete={handleTimerDone}
       />
 
       <PlateCalculatorModal
@@ -905,6 +1002,8 @@ export default function WorkoutActive() {
                 <img
                   src={MUSCLE_IMAGES[currentEx.muscle]}
                   alt={currentEx.muscle}
+                  loading="lazy"
+                  decoding="async"
                   className="max-h-[260px] max-w-[260px] object-contain animate-pulse"
                 />
               )}
@@ -913,25 +1012,36 @@ export default function WorkoutActive() {
             {/* Exercise title */}
             <div className="p-4 border-b border-white/5 relative z-10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className="text-[10px] font-bold uppercase tracking-widest mb-1 font-black"
-                    style={{
-                      color:
-                        MUSCLE_COLORS[currentEx.muscle] ||
-                        "var(--accent-color)",
-                    }}
-                  >
-                    {currentEx.muscle} · 🔥 ~
-                    {getExerciseCalories(
-                      currentEx,
-                      settings?.restDuration || 90,
-                    )}{" "}
-                    kcal
-                  </p>
-                  <h2 className="text-xl font-bold text-slate-100">
-                    {currentEx.name}
-                  </h2>
+                <div className="flex items-center gap-3 min-w-0">
+                  {currentEx.image && (
+                    <img
+                      src={currentEx.image}
+                      alt={currentEx.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-12 h-12 rounded-xl object-cover flex-shrink-0 shadow-lg"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p
+                      className="text-[10px] font-bold uppercase tracking-widest mb-1 font-black"
+                      style={{
+                        color:
+                          MUSCLE_COLORS[currentEx.muscle] ||
+                          "var(--accent-color)",
+                      }}
+                    >
+                      {currentEx.muscle} · 🔥 ~
+                      {getExerciseCalories(
+                        currentEx,
+                        settings?.restDuration || 90,
+                      )}{" "}
+                      kcal
+                    </p>
+                    <h2 className="text-xl font-bold text-slate-100 truncate">
+                      {currentEx.name}
+                    </h2>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {currentEx.type !== "time" && (
@@ -963,13 +1073,9 @@ export default function WorkoutActive() {
                   type="text"
                   placeholder="📝 Añadir nota sobre la máquina, sensaciones..."
                   value={currentEx.notes || ""}
-                  onChange={(e) => {
-                    const updatedExercises = [...activeWorkout.exercises];
-                    updatedExercises[currentExerciseIndex].notes = e.target.value;
-                    useGymStore.setState({
-                      activeWorkout: { ...activeWorkout, exercises: updatedExercises }
-                    });
-                  }}
+                  onChange={(e) =>
+                    updateExerciseNotes(currentExerciseIndex, e.target.value)
+                  }
                   className="input-accent w-full bg-slate-950/40 border border-slate-800/80 rounded-xl py-2 px-3 text-xs text-slate-300 placeholder:text-slate-600 transition-all"
                 />
               </div>
@@ -1031,12 +1137,7 @@ export default function WorkoutActive() {
 
           {/* Cancel */}
           <button
-            onClick={() => {
-              if (confirm("¿Cancelar entrenamiento? No se guardará.")) {
-                cancelWorkout();
-                window.location.href = "/";
-              }
-            }}
+            onClick={() => setConfirmCancelOpen(true)}
             className="w-full py-3 mt-3 text-red-500/60 text-xs font-semibold press-scale"
           >
             Cancelar entrenamiento
@@ -1048,6 +1149,17 @@ export default function WorkoutActive() {
         isOpen={selectorOpen}
         onClose={() => setSelectorOpen(false)}
         onSelect={handleAddExercise}
+      />
+
+      <ConfirmDialog
+        open={confirmCancelOpen}
+        title="¿Cancelar entrenamiento?"
+        message="No se guardará ningún progreso de esta sesión."
+        onConfirm={() => {
+          cancelWorkout();
+          window.location.href = "/";
+        }}
+        onCancel={() => setConfirmCancelOpen(false)}
       />
     </>
   );

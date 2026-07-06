@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { X, Plus, Minus, Volume2, VolumeX } from "lucide-react";
+import { Plus, Minus, Volume2, VolumeX } from "lucide-react";
 
 const speak = (text) => {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
@@ -11,7 +11,7 @@ const speak = (text) => {
     utter.pitch = 1;
     utter.volume = 0.8;
     window.speechSynthesis.speak(utter);
-  } catch (e) {
+  } catch {
     // Silenciar errores
   }
 };
@@ -43,15 +43,19 @@ export default function Timer({
   onComplete,
   onClose,
 }) {
-  const [timeLeft, setTimeLeft] = useState(durationSeconds);
+  // Basado en timestamps (Date.now()), no en contador de intervalos: sobrevive
+  // a pantalla bloqueada / tab en segundo plano donde setInterval se pausa.
+  const [endAt, setEndAt] = useState(() => Date.now() + durationSeconds * 1000);
   const [currentDuration, setCurrentDuration] = useState(durationSeconds);
+  const [timeLeft, setTimeLeft] = useState(durationSeconds);
   const [voiceEnabled, setVoiceEnabled] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("fitpulse-voice-cues") !== "false";
     }
     return true;
   });
-  const intervalRef = useRef(null);
+  const lastAnnouncedRef = useRef(null);
+  const completedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -60,57 +64,68 @@ export default function Timer({
   }, [voiceEnabled]);
 
   useEffect(() => {
-    if (!isActive) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      return;
-    }
+    if (!isActive) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isActive, onClose]);
 
+  // Reiniciar al activarse (nuevo descanso)
+  useEffect(() => {
+    if (!isActive) return;
     setCurrentDuration(durationSeconds);
+    setEndAt(Date.now() + durationSeconds * 1000);
     setTimeLeft(durationSeconds);
+    lastAnnouncedRef.current = null;
+    completedRef.current = false;
+  }, [isActive, durationSeconds]);
 
-    intervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        const nextVal = prev - 1;
+  useEffect(() => {
+    if (!isActive) return;
 
-        // Alertas sonoras en los últimos 3 segundos y al terminar
-        if (nextVal > 0 && nextVal <= 3) {
-          playTone(550, 0.08, "sine");
-          if (voiceEnabled && nextVal === 3) {
-            speak("Tres");
-          } else if (voiceEnabled && nextVal === 2) {
-            speak("Dos");
-          } else if (voiceEnabled && nextVal === 1) {
-            speak("Uno");
-          }
-        } else if (nextVal === 0) {
-          playTone(523.25, 0.12, "triangle");
-          setTimeout(() => playTone(659.25, 0.12, "triangle"), 80);
-          setTimeout(() => playTone(783.99, 0.22, "triangle"), 160);
-          if (voiceEnabled) {
-            speak("¡A por ello! Descanso terminado");
-          }
-        }
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      setTimeLeft(remaining);
 
-        // Voice cue a la mitad del descanso
-        if (voiceEnabled && nextVal === Math.floor(durationSeconds / 2) && nextVal > 5) {
-          speak("Mitad del descanso");
-        }
+      if (remaining > 0 && remaining <= 3 && lastAnnouncedRef.current !== remaining) {
+        lastAnnouncedRef.current = remaining;
+        playTone(550, 0.08, "sine");
+        if (voiceEnabled) speak(remaining === 3 ? "Tres" : remaining === 2 ? "Dos" : "Uno");
+      } else if (
+        remaining === Math.floor(currentDuration / 2) &&
+        remaining > 5 &&
+        lastAnnouncedRef.current !== "half"
+      ) {
+        lastAnnouncedRef.current = "half";
+        if (voiceEnabled) speak("Mitad del descanso");
+      }
 
-        if (prev <= 1) {
-          clearInterval(intervalRef.current);
-          // Vibración háptica dual premium al terminar
-          if (navigator.vibrate) navigator.vibrate([150, 80, 150, 80, 300]);
-          if (onComplete) onComplete();
-          return 0;
-        }
-        return nextVal;
-      });
-    }, 1000);
+      if (remaining <= 0 && !completedRef.current) {
+        completedRef.current = true;
+        playTone(523.25, 0.12, "triangle");
+        setTimeout(() => playTone(659.25, 0.12, "triangle"), 80);
+        setTimeout(() => playTone(783.99, 0.22, "triangle"), 160);
+        if (voiceEnabled) speak("¡A por ello! Descanso terminado");
+        if (navigator.vibrate) navigator.vibrate([150, 80, 150, 80, 300]);
+        if (onComplete) onComplete();
+      }
+    };
+
+    tick();
+    const intervalId = setInterval(tick, 1000);
+    // Recalcular al instante al volver de segundo plano (pantalla bloqueada, cambio de tab)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") tick();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [isActive, durationSeconds, voiceEnabled]);
+  }, [isActive, endAt, currentDuration, voiceEnabled, onComplete]);
 
   if (!isActive) return null;
 
@@ -124,24 +139,28 @@ export default function Timer({
   const strokeDashoffset = circumference * (1 - progress);
 
   const adjustTime = (delta) => {
-    setTimeLeft((prev) => Math.max(0, prev + delta));
+    setEndAt((prev) => Math.max(Date.now(), prev + delta * 1000));
     setCurrentDuration((prev) => Math.max(15, prev + delta));
+    completedRef.current = false;
   };
 
   const setPreset = (seconds) => {
-    setTimeLeft(seconds);
+    setEndAt(Date.now() + seconds * 1000);
     setCurrentDuration(seconds);
+    completedRef.current = false;
   };
 
   const PRESETS = [30, 60, 90, 120, 180];
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center animate-fade-in"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
 
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
       <div
         className="relative z-10 flex flex-col items-center gap-6 px-8"
         onClick={(e) => e.stopPropagation()}

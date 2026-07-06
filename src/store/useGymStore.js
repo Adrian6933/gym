@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "../db/supabase";
+import { getLocalDateString, getMondayOfWeek } from "../utils/dates";
+import { useToastStore } from "../components/Toast";
 
 // ===== AUXILIARES DE ESTADÍSTICAS (v3.5) =====
 export const calculateStreak = (history) => {
@@ -7,10 +9,7 @@ export const calculateStreak = (history) => {
 
   const uniqueDates = Array.from(
     new Set(
-      history.map((w) => {
-        const date = new Date(w.endTime);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      }),
+      history.map((w) => getLocalDateString(new Date(w.endTime))),
     ),
   ).sort((a, b) => b.localeCompare(a));
 
@@ -48,10 +47,7 @@ export const calculateRecordStreak = (history) => {
 
   const uniqueDates = Array.from(
     new Set(
-      history.map((w) => {
-        const date = new Date(w.endTime || w.startTime);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      }),
+      history.map((w) => getLocalDateString(new Date(w.endTime || w.startTime))),
     ),
   ).sort((a, b) => a.localeCompare(b));
 
@@ -106,7 +102,11 @@ export const getExerciseCalories = (ex, restDuration = 90) => {
     } else if (muscle === "Cardio") {
       factor = 8.0;
     }
-    return Math.round(sets * factor);
+
+    // El descanso entre series también quema algo (metabolismo elevado post-esfuerzo)
+    const restMins = ((sets - 1) * restDuration) / 60;
+    const restCalories = restMins * 1.2;
+    return Math.round(sets * factor + restCalories);
   }
 };
 
@@ -138,21 +138,11 @@ export const getRoutineStats = (routine, restDuration = 90) => {
   };
 };
 
-function getLocalDateString(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
 export const getWeeklyConsistency = (history) => {
   const consistency = Array(7).fill(false);
   if (!history) return consistency;
 
-  const today = new Date();
-  const currentDay = today.getDay();
-  const daysToMonday = currentDay === 0 ? 6 : currentDay - 1;
-
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - daysToMonday);
-  monday.setHours(0, 0, 0, 0);
+  const monday = getMondayOfWeek();
 
   history.forEach((w) => {
     const wDate = new Date(w.endTime);
@@ -171,12 +161,7 @@ export const getWeeklyStats = (history) => {
   let count = 0;
   let duration = 0;
 
-  const today = new Date();
-  const currentDay = today.getDay();
-  const daysToMonday = currentDay === 0 ? 6 : currentDay - 1;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - daysToMonday);
-  monday.setHours(0, 0, 0, 0);
+  const monday = getMondayOfWeek();
 
   history.forEach((w) => {
     const wDate = new Date(w.endTime);
@@ -189,7 +174,9 @@ export const getWeeklyStats = (history) => {
           if (ex.sets) {
             ex.sets.forEach((s) => {
               if (s.completed && s.weight && s.reps) {
-                volume += parseFloat(s.weight) * parseInt(s.reps);
+                const w = parseFloat(s.weight);
+                const r = parseInt(s.reps, 10);
+                if (!isNaN(w) && !isNaN(r)) volume += w * r;
               }
             });
           }
@@ -372,6 +359,15 @@ export const useGymStore = create((set, get) => ({
         const localEnableRpeRir = typeof window !== "undefined" ? localStorage.getItem("fitpulse-enable-rpe-rir") === "true" : false;
         const localLevel = typeof window !== "undefined" ? Number(localStorage.getItem("fitpulse-level") || "1") : 1;
         const localExp = typeof window !== "undefined" ? Number(localStorage.getItem("fitpulse-exp") || "0") : 0;
+
+        // Limpiar el entreno activo del usuario anterior: en un dispositivo
+        // compartido, el siguiente que inicie sesión no debe ver ni heredar
+        // el entreno en curso de otra cuenta.
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("fitpulse-active-workout");
+          sessionStorage.removeItem("fitpulse-active-exercise-index");
+        }
+
         set({
           user: null,
           settings: { ...DEFAULT_SETTINGS, gender: localGender, enableRpeRir: localEnableRpeRir },
@@ -380,6 +376,8 @@ export const useGymStore = create((set, get) => ({
           personalRecords: {},
           userLevel: localLevel,
           userExp: localExp,
+          activeWorkout: null,
+          currentExerciseIndex: 0,
           isLoading: false,
         });
 
@@ -543,6 +541,12 @@ export const useGymStore = create((set, get) => ({
       } catch (err) {
         console.error("Error al inicializar sesión en Supabase:", err);
         set({ isLoading: false });
+        useToastStore.getState().addToast({
+          type: "info",
+          title: "No se pudo cargar tus datos",
+          message: "Revisa tu conexión e intenta recargar la app.",
+          duration: 5000,
+        });
       }
     };
 
@@ -915,6 +919,16 @@ export const useGymStore = create((set, get) => ({
       };
     }),
 
+  updateExerciseNotes: (exerciseIndex, notes) =>
+    set((state) => {
+      if (!state.activeWorkout) return state;
+      const newExercises = [...state.activeWorkout.exercises];
+      newExercises[exerciseIndex] = { ...newExercises[exerciseIndex], notes };
+      return {
+        activeWorkout: { ...state.activeWorkout, exercises: newExercises },
+      };
+    }),
+
   toggleSetComplete: (exerciseIndex, setIndex) =>
     set((state) => {
       if (!state.activeWorkout) return state;
@@ -949,9 +963,6 @@ export const useGymStore = create((set, get) => ({
     let completedSetsCount = 0;
 
     workout.exercises.forEach((ex) => {
-      let exMaxWeight = null;
-      let exMaxVolume = null;
-
       ex.sets.forEach((s) => {
         if (s.completed) {
           completedSetsCount++;
@@ -971,7 +982,6 @@ export const useGymStore = create((set, get) => ({
                 maxWeightDate: endTime,
                 exerciseName: ex.name,
               };
-              exMaxWeight = w;
               isNewMaxWeight = true;
             }
             if (!current || vol > (current.maxVolume || 0)) {
@@ -981,7 +991,6 @@ export const useGymStore = create((set, get) => ({
                 maxVolumeDate: endTime,
                 exerciseName: ex.name,
               };
-              exMaxVolume = vol;
               isNewMaxVolume = true;
             }
 
@@ -1006,34 +1015,59 @@ export const useGymStore = create((set, get) => ({
       }
     });
 
-    // Guardar el entreno en Supabase
-    const { data: dbWorkout, error: workoutError } = await supabase
-      .from("workouts_history")
-      .insert({
-        user_id: user.id,
-        routine_id: workout.routineId,
-        name: workout.name,
-        emoji: workout.emoji,
-        color: workout.color,
-        start_time: workout.startTime,
-        end_time: workout.endTime,
-        exercises: workout.exercises,
-      })
-      .select()
-      .single();
+    // Guardar el entreno en Supabase (con 1 reintento ante fallo transitorio)
+    const insertWorkout = () =>
+      supabase
+        .from("workouts_history")
+        .insert({
+          user_id: user.id,
+          routine_id: workout.routineId,
+          name: workout.name,
+          emoji: workout.emoji,
+          color: workout.color,
+          start_time: workout.startTime,
+          end_time: workout.endTime,
+          exercises: workout.exercises,
+        })
+        .select()
+        .single();
+
+    let { data: dbWorkout, error: workoutError } = await insertWorkout();
+    if (workoutError) {
+      ({ data: dbWorkout, error: workoutError } = await insertWorkout());
+    }
 
     if (workoutError) {
       console.error("Error saving workout history:", workoutError);
+      useToastStore.getState().addToast({
+        type: "info",
+        title: "No se pudo guardar el entrenamiento",
+        message: "Revisa tu conexión. Tu progreso local no se ha perdido, pero no se sincronizó.",
+        duration: 5000,
+      });
     } else if (dbWorkout) {
       workout.id = dbWorkout.id;
     }
 
-    // Guardar PRs en Supabase si hay alguno
+    // Guardar PRs en Supabase si hay alguno (con 1 reintento)
     if (prsToUpsert.length > 0) {
-      const { error: prsError } = await supabase
+      let { error: prsError } = await supabase
         .from("personal_records")
         .upsert(prsToUpsert);
-      if (prsError) console.error("Error saving personal records:", prsError);
+      if (prsError) {
+        ({ error: prsError } = await supabase
+          .from("personal_records")
+          .upsert(prsToUpsert));
+      }
+      if (prsError) {
+        console.error("Error saving personal records:", prsError);
+        useToastStore.getState().addToast({
+          type: "info",
+          title: "No se pudieron guardar tus récords",
+          message: "El entrenamiento se guardó, pero los PRs no se sincronizaron. Se reintentará más tarde.",
+          duration: 5000,
+        });
+      }
     }
 
     // Calcular EXP y otorgarla
@@ -1120,3 +1154,20 @@ export const useGymStore = create((set, get) => ({
     });
   },
 }));
+
+// Sync automático activeWorkout -> sessionStorage en cada cambio (evita perder
+// reps/pesos/notas al refrescar a mitad de un set)
+if (typeof window !== "undefined") {
+  useGymStore.subscribe((state, prevState) => {
+    if (state.activeWorkout !== prevState.activeWorkout) {
+      if (state.activeWorkout) {
+        sessionStorage.setItem(
+          "fitpulse-active-workout",
+          JSON.stringify(state.activeWorkout),
+        );
+      } else {
+        sessionStorage.removeItem("fitpulse-active-workout");
+      }
+    }
+  });
+}

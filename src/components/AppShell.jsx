@@ -1,12 +1,21 @@
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense, lazy } from "react";
 import { useGymStore } from "../store/useGymStore";
 import AppInitializer from "./AppInitializer";
 import GoogleLogin from "./GoogleLogin";
 import HomeView from "./HomeView";
 import WorkoutActive from "./WorkoutActive";
-import StatsView from "./StatsView";
-import HistoryView from "./HistoryView";
-import SettingsView from "./SettingsView";
+
+const StatsView = lazy(() => import("./StatsView"));
+const HistoryView = lazy(() => import("./HistoryView"));
+const SettingsView = lazy(() => import("./SettingsView"));
+
+function ViewFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-8 h-8 border-2 border-lime-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 export default function AppShell({ defaultTab }) {
   const user = useGymStore((s) => s.user);
@@ -38,11 +47,23 @@ export default function AppShell({ defaultTab }) {
     case "workout":
       return <WorkoutActive />;
     case "stats":
-      return <StatsView />;
+      return (
+        <Suspense fallback={<ViewFallback />}>
+          <StatsView />
+        </Suspense>
+      );
     case "history":
-      return <HistoryView />;
+      return (
+        <Suspense fallback={<ViewFallback />}>
+          <HistoryView />
+        </Suspense>
+      );
     case "settings":
-      return <SettingsView />;
+      return (
+        <Suspense fallback={<ViewFallback />}>
+          <SettingsView />
+        </Suspense>
+      );
     default:
       return <HomeView />;
   }

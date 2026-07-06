@@ -7,13 +7,16 @@ import {
   Clock,
   Dumbbell,
   Flame,
-  Trophy,
 } from "lucide-react";
 import BottomNav from "./BottomNav";
+import ConfirmDialog from "./ConfirmDialog";
+import { getLocalDateString } from "../utils/dates";
 
 export default function HistoryView() {
   const { history, deleteHistoryEntry, clearHistory } = useGymStore();
   const [expandedIdx, setExpandedIdx] = useState(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState(null);
 
   const sortedHistory = [...history].reverse();
 
@@ -23,8 +26,8 @@ export default function HistoryView() {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (d.toDateString() === today.toDateString()) return "Hoy";
-    if (d.toDateString() === yesterday.toDateString()) return "Ayer";
+    if (getLocalDateString(d) === getLocalDateString(today)) return "Hoy";
+    if (getLocalDateString(d) === getLocalDateString(yesterday)) return "Ayer";
     return d.toLocaleDateString("es-ES", {
       day: "numeric",
       month: "short",
@@ -81,9 +84,7 @@ export default function HistoryView() {
           </div>
           {history.length > 0 && (
             <button
-              onClick={() => {
-                if (confirm("¿Borrar todo el historial?")) clearHistory();
-              }}
+              onClick={() => setConfirmClearAll(true)}
               className="text-xs text-red-400/50 font-medium px-3 py-2 rounded-lg press-scale"
             >
               Borrar todo
@@ -239,8 +240,7 @@ export default function HistoryView() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          deleteHistoryEntry(history.length - 1 - idx);
-                          setExpandedIdx(null);
+                          setConfirmDeleteIdx(idx);
                         }}
                         className="w-full py-2.5 rounded-xl bg-red-500/10 text-red-400/70 text-xs font-bold flex items-center justify-center gap-1.5 press-scale mt-2"
                       >
@@ -255,6 +255,27 @@ export default function HistoryView() {
         )}
       </div>
       <BottomNav />
+      <ConfirmDialog
+        open={confirmClearAll}
+        title="¿Borrar todo el historial?"
+        message="Esta acción no se puede deshacer. Perderás todos tus entrenamientos registrados."
+        onConfirm={() => {
+          clearHistory();
+          setConfirmClearAll(false);
+        }}
+        onCancel={() => setConfirmClearAll(false)}
+      />
+      <ConfirmDialog
+        open={confirmDeleteIdx !== null}
+        title="¿Eliminar este entrenamiento?"
+        message="Esta acción no se puede deshacer."
+        onConfirm={() => {
+          deleteHistoryEntry(history.length - 1 - confirmDeleteIdx);
+          setExpandedIdx(null);
+          setConfirmDeleteIdx(null);
+        }}
+        onCancel={() => setConfirmDeleteIdx(null)}
+      />
     </>
   );
 }

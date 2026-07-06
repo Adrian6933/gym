@@ -32,7 +32,6 @@ export default function OneRMCalculator({
   const [reps, setReps] = useState(defaultReps);
   const [formula, setFormula] = useState("epley");
   const [warmupSets, setWarmupSets] = useState(DEFAULT_WARMUP);
-  const [unit, setUnit] = useState("kg");
 
   useEffect(() => {
     if (isOpen) {
@@ -40,6 +39,15 @@ export default function OneRMCalculator({
       setReps(defaultReps);
     }
   }, [isOpen, defaultWeight, defaultReps]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   const oneRM = FORMULAS[formula].fn(parseFloat(weight) || 0, parseInt(reps) || 1);
 
@@ -64,12 +72,14 @@ export default function OneRMCalculator({
   if (!isOpen) return null;
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
     <div
       className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center animate-fade-in"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
 
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
       <div
         className="relative z-10 w-full max-w-md bg-slate-900 rounded-t-[2.5rem] sm:rounded-[2rem] p-6 pb-8 animate-slide-up-sheet safe-bottom shadow-[0_-20px_60px_rgba(0,0,0,0.6)] max-h-[90vh] overflow-y-auto no-scrollbar"
         onClick={(e) => e.stopPropagation()}
@@ -105,11 +115,15 @@ export default function OneRMCalculator({
         {/* Inputs */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-slate-950/50 rounded-2xl p-4 border border-white/5">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+            <label
+              htmlFor="onerm-weight"
+              className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2"
+            >
               Peso Levantado
             </label>
             <div className="flex items-baseline gap-1">
               <input
+                id="onerm-weight"
                 type="number"
                 step="0.5"
                 value={weight || ""}
@@ -120,10 +134,14 @@ export default function OneRMCalculator({
             </div>
           </div>
           <div className="bg-slate-950/50 rounded-2xl p-4 border border-white/5">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+            <label
+              htmlFor="onerm-reps"
+              className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2"
+            >
               Repeticiones
             </label>
             <input
+              id="onerm-reps"
               type="number"
               min="1"
               max="20"
@@ -136,9 +154,9 @@ export default function OneRMCalculator({
 
         {/* Selector de fórmula */}
         <div className="mb-4">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
             Fórmula
-          </label>
+          </span>
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
             {Object.entries(FORMULAS).map(([key, f]) => (
               <button

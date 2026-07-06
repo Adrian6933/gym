@@ -5,6 +5,7 @@ export const EXERCISE_DB = [
   // === PECHO ===
   {
     id: "chest-1",
+    image: "/images/exercises/chest-1.webp",
     name: "Press de Banca",
     muscle: "Pecho",
     type: "reps",
@@ -12,6 +13,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "chest-2",
+    image: "/images/exercises/chest-2.webp",
     name: "Press Inclinado Mancuernas",
     muscle: "Pecho",
     type: "reps",
@@ -19,6 +21,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "chest-3",
+    image: "/images/exercises/chest-3.webp",
     name: "Aperturas con Mancuernas",
     muscle: "Pecho",
     type: "reps",
@@ -26,6 +29,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "chest-4",
+    image: "/images/exercises/chest-4.webp",
     name: "Fondos en Paralelas",
     muscle: "Pecho",
     type: "reps",
@@ -33,6 +37,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "chest-5",
+    image: "/images/exercises/chest-5.webp",
     name: "Press Declinado",
     muscle: "Pecho",
     type: "reps",
@@ -42,6 +47,7 @@ export const EXERCISE_DB = [
   // === ESPALDA ===
   {
     id: "back-1",
+    image: "/images/exercises/back-1.webp",
     name: "Dominadas",
     muscle: "Espalda",
     type: "reps",
@@ -49,6 +55,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "back-2",
+    image: "/images/exercises/back-2.webp",
     name: "Remo con Barra",
     muscle: "Espalda",
     type: "reps",
@@ -56,6 +63,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "back-3",
+    image: "/images/exercises/back-3.webp",
     name: "Jalón al Pecho",
     muscle: "Espalda",
     type: "reps",
@@ -63,6 +71,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "back-4",
+    image: "/images/exercises/back-4.webp",
     name: "Remo con Mancuerna",
     muscle: "Espalda",
     type: "reps",
@@ -70,6 +79,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "back-5",
+    image: "/images/exercises/back-5.webp",
     name: "Peso Muerto",
     muscle: "Espalda",
     type: "reps",
@@ -79,6 +89,7 @@ export const EXERCISE_DB = [
   // === HOMBRO ===
   {
     id: "shoulder-1",
+    image: "/images/exercises/shoulder-1.webp",
     name: "Press Militar",
     muscle: "Hombro",
     type: "reps",
@@ -86,6 +97,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "shoulder-2",
+    image: "/images/exercises/shoulder-2.webp",
     name: "Elevaciones Laterales",
     muscle: "Hombro",
     type: "reps",
@@ -93,6 +105,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "shoulder-3",
+    image: "/images/exercises/shoulder-3.webp",
     name: "Elevaciones Frontales",
     muscle: "Hombro",
     type: "reps",
@@ -100,6 +113,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "shoulder-4",
+    image: "/images/exercises/shoulder-4.webp",
     name: "Pájaros (Rear Delt Fly)",
     muscle: "Hombro",
     type: "reps",
@@ -109,6 +123,7 @@ export const EXERCISE_DB = [
   // === BÍCEPS ===
   {
     id: "bicep-1",
+    image: "/images/exercises/bicep-1.webp",
     name: "Curl de Bíceps con Barra",
     muscle: "Bíceps",
     type: "reps",
@@ -116,6 +131,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "bicep-2",
+    image: "/images/exercises/bicep-2.webp",
     name: "Curl Martillo",
     muscle: "Bíceps",
     type: "reps",
@@ -123,6 +139,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "bicep-3",
+    image: "/images/exercises/bicep-3.webp",
     name: "Curl Inclinado",
     muscle: "Bíceps",
     type: "reps",
@@ -130,6 +147,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "bicep-4",
+    image: "/images/exercises/bicep-4.webp",
     name: "Curl Concentrado",
     muscle: "Bíceps",
     type: "reps",
@@ -139,6 +157,7 @@ export const EXERCISE_DB = [
   // === TRÍCEPS ===
   {
     id: "tricep-1",
+    image: "/images/exercises/tricep-1.webp",
     name: "Extensión Tríceps Polea",
     muscle: "Tríceps",
     type: "reps",
@@ -146,6 +165,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "tricep-2",
+    image: "/images/exercises/tricep-2.webp",
     name: "Press Francés",
     muscle: "Tríceps",
     type: "reps",
@@ -153,6 +173,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "tricep-3",
+    image: "/images/exercises/tricep-3.webp",
     name: "Fondos en Banco",
     muscle: "Tríceps",
     type: "reps",
@@ -160,6 +181,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "tricep-4",
+    image: "/images/exercises/tricep-4.webp",
     name: "Patada de Tríceps",
     muscle: "Tríceps",
     type: "reps",
@@ -169,6 +191,7 @@ export const EXERCISE_DB = [
   // === PIERNA ===
   {
     id: "leg-1",
+    image: "/images/exercises/leg-1.webp",
     name: "Sentadilla Libre",
     muscle: "Pierna",
     type: "reps",
@@ -176,6 +199,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "leg-2",
+    image: "/images/exercises/leg-2.webp",
     name: "Prensa de Piernas",
     muscle: "Pierna",
     type: "reps",
@@ -183,6 +207,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "leg-3",
+    image: "/images/exercises/leg-3.webp",
     name: "Extensión de Cuádriceps",
     muscle: "Pierna",
     type: "reps",
@@ -190,6 +215,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "leg-4",
+    image: "/images/exercises/leg-4.webp",
     name: "Curl Femoral",
     muscle: "Pierna",
     type: "reps",
@@ -197,6 +223,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "leg-5",
+    image: "/images/exercises/leg-5.webp",
     name: "Zancadas",
     muscle: "Pierna",
     type: "reps",
@@ -204,6 +231,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "leg-6",
+    image: "/images/exercises/leg-6.webp",
     name: "Hip Thrust",
     muscle: "Pierna",
     type: "reps",
@@ -211,6 +239,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "leg-7",
+    image: "/images/exercises/leg-7.webp",
     name: "Elevación de Gemelos",
     muscle: "Pierna",
     type: "reps",
@@ -220,6 +249,7 @@ export const EXERCISE_DB = [
   // === CORE ===
   {
     id: "core-1",
+    image: "/images/exercises/core-1.webp",
     name: "Crunch Abdominal",
     muscle: "Core",
     type: "reps",
@@ -227,6 +257,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "core-2",
+    image: "/images/exercises/core-2.webp",
     name: "Plancha",
     muscle: "Core",
     type: "time",
@@ -234,6 +265,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "core-3",
+    image: "/images/exercises/core-3.webp",
     name: "Russian Twist",
     muscle: "Core",
     type: "reps",
@@ -241,6 +273,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "core-4",
+    image: "/images/exercises/core-4.webp",
     name: "Elevación de Piernas",
     muscle: "Core",
     type: "reps",
@@ -248,6 +281,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "core-5",
+    image: "/images/exercises/core-5.webp",
     name: "Plancha Lateral",
     muscle: "Core",
     type: "time",
@@ -255,6 +289,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "core-6",
+    image: "/images/exercises/core-6.webp",
     name: "Mountain Climbers",
     muscle: "Core",
     type: "time",
@@ -264,6 +299,7 @@ export const EXERCISE_DB = [
   // === CARDIO ===
   {
     id: "cardio-1",
+    image: "/images/exercises/cardio-1.webp",
     name: "Cinta de Correr",
     muscle: "Cardio",
     type: "time",
@@ -271,6 +307,7 @@ export const EXERCISE_DB = [
   },
   {
     id: "cardio-2",
+    image: "/images/exercises/cardio-2.webp",
     name: "Bicicleta Estática",
     muscle: "Cardio",
     type: "time",
@@ -320,12 +357,12 @@ export const MUSCLE_COLORS = {
 };
 
 export const MUSCLE_IMAGES = {
-  Pecho: "/images/muscles/chest.png",
-  Espalda: "/images/muscles/back.png",
-  Hombro: "/images/muscles/shoulders.png",
-  Bíceps: "/images/muscles/arms.png",
-  Tríceps: "/images/muscles/arms.png",
-  Pierna: "/images/muscles/legs.png",
-  Core: "/images/muscles/core.png",
-  Cardio: "/images/muscles/cardio.png",
+  Pecho: "/images/muscles/chest.webp",
+  Espalda: "/images/muscles/back.webp",
+  Hombro: "/images/muscles/shoulders.webp",
+  Bíceps: "/images/muscles/arms.webp",
+  Tríceps: "/images/muscles/arms.webp",
+  Pierna: "/images/muscles/legs.webp",
+  Core: "/images/muscles/core.webp",
+  Cardio: "/images/muscles/cardio.webp",
 };

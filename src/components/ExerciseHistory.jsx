@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { X, TrendingUp, Trophy, Activity, Target, Calendar, Share2 } from "lucide-react";
 import { useGymStore } from "../store/useGymStore";
 import { MUSCLE_COLORS } from "../data/exercises";
@@ -137,7 +137,7 @@ function BarChart({ data, color, maxValue, height = 120 }) {
 }
 
 export default function ExerciseHistory({ exercise, isOpen, onClose }) {
-  const { history, settings, personalRecords } = useGymStore();
+  const { history, settings } = useGymStore();
   const [period, setPeriod] = useState("3m");
   const [activeTab, setActiveTab] = useState("summary");
 
@@ -213,13 +213,24 @@ export default function ExerciseHistory({ exercise, isOpen, onClose }) {
 
   const color = MUSCLE_COLORS[exercise.muscle] || "var(--accent-color)";
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- equivalente por teclado: Escape (ver useEffect arriba)
     <div
       className="fixed inset-0 z-[150] flex flex-col bg-[#0a0a0f] animate-fade-in"
       onClick={onClose}
     >
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- stopPropagation, no es una interacción real */}
       <div
         className="relative flex-1 overflow-y-auto animate-slide-up-sheet"
         onClick={(e) => e.stopPropagation()}
@@ -236,6 +247,15 @@ export default function ExerciseHistory({ exercise, isOpen, onClose }) {
             >
               <X size={20} />
             </button>
+            {exercise.image && (
+              <img
+                src={exercise.image}
+                alt={exercise.name}
+                loading="lazy"
+                decoding="async"
+                className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
+              />
+            )}
             <div className="flex-1 min-w-0">
               <p
                 className="text-[10px] font-bold uppercase tracking-widest"
