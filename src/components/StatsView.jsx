@@ -231,6 +231,51 @@ export default function StatsView() {
   });
   const maxWeekVol = Math.max(...weekData.map((d) => d.value), 1);
 
+  // === Volumen por semana (últimas 8 semanas) con tendencia ===
+  const WEEKS_TREND = 8;
+  // Lunes de la semana actual
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
+  const todayDayNum = todayMidnight.getDay();
+  const daysToMonday = todayDayNum === 0 ? 6 : todayDayNum - 1;
+  const thisMonday = new Date(todayMidnight);
+  thisMonday.setDate(todayMidnight.getDate() - daysToMonday);
+  const thisMondayMs = thisMonday.getTime();
+
+  const weeklyTrend = Array.from({ length: WEEKS_TREND }, (_, i) => {
+    const weekStart = thisMondayMs - (WEEKS_TREND - 1 - i) * 7 * dayMs;
+    const weekEnd = weekStart + 7 * dayMs;
+    const startDate = new Date(weekStart);
+    const label = `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}`;
+    let vol = 0;
+    history.forEach((w) => {
+      const t = w.endTime || w.startTime;
+      if (t >= weekStart && t < weekEnd) {
+        w.exercises.forEach((ex) =>
+          ex.sets.forEach((s) => {
+            if (s.completed && s.weight && s.reps)
+              vol += parseFloat(s.weight) * parseInt(s.reps);
+          }),
+        );
+      }
+    });
+    return { label, value: vol };
+  });
+  const maxTrendVol = Math.max(...weeklyTrend.map((w) => w.value), 1);
+  // Línea de tendencia: media móvil simple de 2 puntos (suavizado)
+  const trendLine = weeklyTrend.map((w, i) => {
+    const prev = weeklyTrend[i - 1]?.value ?? w.value;
+    const next = weeklyTrend[i + 1]?.value ?? w.value;
+    return Math.round(((prev + w.value + next) / 3) * 10) / 10;
+  });
+  const trendPoints = weeklyTrend
+    .map((w, i) => {
+      const x = (i / (WEEKS_TREND - 1)) * 100;
+      const y = 100 - (trendLine[i] / maxTrendVol) * 90;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+
   const daysTrainedThisWeek = weekData.filter((d) => d.value > 0).length;
   const weeklyGoal = settings?.weeklyGoal || 4;
   const weeklyProgress = Math.min(
@@ -469,6 +514,105 @@ export default function StatsView() {
             </div>
           </div>
         </div>
+
+        {/* Gráfica de volumen semanal (8 semanas) con tendencia */}
+        {weeklyTrend.some((w) => w.value > 0) && (
+          <div className="gradient-card rounded-2xl p-4.5">
+            <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+              <TrendingUp size={13} className="text-[var(--accent-color)]" />
+              Volumen por Semana (8 sem.)
+            </h3>
+            <p className="text-[10px] text-slate-600 font-medium mb-4">
+              Tendencia de kg levantados por semana · línea de tendencia
+            </p>
+            <div className="relative w-full h-32">
+              {/* Grid lines */}
+              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                {[0, 1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="w-full border-t border-slate-800/40"
+                    style={{ height: "25%" }}
+                  />
+                ))}
+              </div>
+              {/* Bars */}
+              <div className="absolute inset-0 flex items-end gap-1.5">
+                {weeklyTrend.map((w, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 flex flex-col items-center gap-1 h-full justify-end"
+                  >
+                    {w.value > 0 && (
+                      <span className="text-[8px] text-[var(--accent-color)] font-black tabular-nums">
+                        {w.value > 999
+                          ? `${(w.value / 1000).toFixed(1)}k`
+                          : w.value}
+                      </span>
+                    )}
+                    <div
+                      className="w-full rounded-t-md transition-all duration-500"
+                      style={{
+                        height: `${Math.max((w.value / maxTrendVol) * 85, w.value > 0 ? 5 : 2)}%`,
+                        backgroundColor:
+                          w.value > 0 ? "var(--accent-color)" : "var(--bar-track-bg)",
+                        boxShadow:
+                          w.value > 0
+                            ? "0 0 10px rgba(var(--accent-color-rgb), 0.25)"
+                            : "none",
+                        opacity: w.value > 0 ? 0.85 : 1,
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              {/* Trend line (SVG overlay) */}
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                className="absolute inset-0 w-full h-full pointer-events-none"
+              >
+                <polyline
+                  points={trendPoints}
+                  fill="none"
+                  stroke="var(--accent-color)"
+                  strokeWidth="1.5"
+                  strokeOpacity="0.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+                {weeklyTrend.map((w, i) => {
+                  const x = (i / (WEEKS_TREND - 1)) * 100;
+                  const y = 100 - (trendLine[i] / maxTrendVol) * 90;
+                  return (
+                    <circle
+                      key={i}
+                      cx={x}
+                      cy={y}
+                      r="1.4"
+                      fill="var(--bg-color)"
+                      stroke="var(--accent-color)"
+                      strokeWidth="1"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  );
+                })}
+              </svg>
+            </div>
+            {/* Labels */}
+            <div className="flex gap-1.5 mt-2">
+              {weeklyTrend.map((w, i) => (
+                <span
+                  key={i}
+                  className={`flex-1 text-center text-[8px] font-bold ${w.value > 0 ? "text-slate-400" : "text-slate-650"}`}
+                >
+                  {w.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Anatomical Heatmap SVG */}
         <div className="gradient-card rounded-2xl p-5">

@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* Inter autohospedada (variable, solo se descarga el subset usado) —
+   evita la petición render-blocking a fonts.googleapis.com */
+@import "@fontsource-variable/inter";
 
 :root {
   --accent-color: #84cc16;
@@ -184,7 +187,7 @@
   --color-lime-400: var(--accent-gradient-start);
   --color-lime-500: var(--accent-color);
   --color-lime-600: var(--accent-gradient-end);
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
@@ -195,6 +198,7 @@
 
   html {
     font-family:
+      "Inter Variable",
       "Inter",
       system-ui,
       -apple-system,

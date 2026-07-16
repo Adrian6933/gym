@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useGymStore, getRoutineStats } from "../store/useGymStore";
-import { Play, Plus, Trash2, Edit3, Sparkles, X } from "lucide-react";
+import { Play, Plus, Trash2, Edit3, Sparkles, X, Copy } from "lucide-react";
 import BottomNav from "./BottomNav";
 import RoutineEditor from "./RoutineEditor";
 import { ROUTINE_TEMPLATES } from "../data/routineTemplates";
@@ -78,6 +78,15 @@ export default function RoutineManager() {
       return;
     }
     startWorkout(routine);
+  };
+
+  const handleDuplicate = (routine) => {
+    addRoutine({
+      name: `${routine.name} (copia)`,
+      emoji: routine.emoji,
+      color: routine.color,
+      exercises: routine.exercises.map((ex) => ({ ...ex })),
+    });
   };
 
   if (editingRoutineId) {
@@ -182,8 +191,16 @@ export default function RoutineManager() {
                     <button
                       onClick={() => setEditingRoutineId(routine.id)}
                       className="w-9 h-9 rounded-xl bg-slate-800/60 flex items-center justify-center text-slate-400 active:scale-90 transition-transform border border-white/5"
+                      title="Editar rutina"
                     >
                       <Edit3 size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDuplicate(routine)}
+                      className="w-9 h-9 rounded-xl bg-slate-800/60 flex items-center justify-center text-slate-400 active:scale-90 transition-transform border border-white/5"
+                      title="Duplicar rutina"
+                    >
+                      <Copy size={15} />
                     </button>
                     <button
                       onClick={() =>
@@ -192,6 +209,7 @@ export default function RoutineManager() {
                         )
                       }
                       className="w-9 h-9 rounded-xl bg-slate-800/60 flex items-center justify-center text-slate-400 active:scale-90 transition-transform border border-white/5"
+                      title="Eliminar rutina"
                     >
                       <Trash2 size={15} />
                     </button>

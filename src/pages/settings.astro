@@ -1,8 +1,12 @@
 ---
 import MobileLayout from '../layouts/MobileLayout.astro';
-import SettingsView from '../components/SettingsView.jsx';
+import AppShell from '../components/AppShell.jsx';
 ---
 
-<MobileLayout title="FitPulse — Ajustes">
-  <SettingsView client:only="react" />
+<MobileLayout
+  title="FitPulse — Ajustes"
+  description="Configura unidades, descanso, tema visual y tu cuenta de FitPulse."
+  noindex={true}
+>
+  <AppShell defaultTab="settings" client:only="react" />
 </MobileLayout>

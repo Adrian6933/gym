@@ -4,11 +4,13 @@
   "description": "Tu entrenador personal de bolsillo. Registra, analiza y supera tus marcas.",
   "start_url": "/",
   "id": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
   "theme_color": "#0a0a0f",
   "orientation": "portrait",
   "lang": "es",
+  "categories": ["health", "fitness", "sports"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -33,7 +35,14 @@
     {
       "name": "Entrenar",
       "url": "/workout",
-      "description": "Empezar un entrenamiento"
+      "description": "Empezar un entrenamiento",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

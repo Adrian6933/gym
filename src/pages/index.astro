@@ -1,8 +1,29 @@
 ---
 import MobileLayout from '../layouts/MobileLayout.astro';
 import AppShell from '../components/AppShell.jsx';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'FitPulse',
+  url: 'https://fitpulse.app/',
+  applicationCategory: 'HealthApplication',
+  operatingSystem: 'Any',
+  inLanguage: 'es',
+  description:
+    'FitPulse: registra tus entrenamientos, sigue tu progreso, marca récords personales y alcanza tus metas de gimnasio.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'EUR',
+  },
+};
 ---
 
-<MobileLayout title="FitPulse — Inicio">
+<MobileLayout
+  title="FitPulse — App de rutinas y entrenamiento de gimnasio"
+  description="Crea tus rutinas de gimnasio, entrena con temporizador de descansos, registra récords personales y sigue tu progreso. Gratis e instalable."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <AppShell defaultTab="home" client:only="react" />
 </MobileLayout>

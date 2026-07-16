@@ -1,10 +1,9 @@
 import React, { useEffect, Suspense, lazy } from "react";
 import { useGymStore } from "../store/useGymStore";
-import AppInitializer from "./AppInitializer";
 import GoogleLogin from "./GoogleLogin";
 import HomeView from "./HomeView";
-import WorkoutActive from "./WorkoutActive";
 
+const WorkoutActive = lazy(() => import("./WorkoutActive"));
 const StatsView = lazy(() => import("./StatsView"));
 const HistoryView = lazy(() => import("./HistoryView"));
 const SettingsView = lazy(() => import("./SettingsView"));
@@ -30,9 +29,9 @@ export default function AppShell({ defaultTab }) {
     }
   }, [defaultTab, setActiveTab]);
 
-  // Mostrar inicializador (pantalla de carga de Supabase) si está cargando
+  // El AppInitializer del layout ya muestra la pantalla de carga global
   if (isLoading) {
-    return <AppInitializer />;
+    return null;
   }
 
   // Si no hay sesión, obligar a ir a GoogleLogin
@@ -45,7 +44,11 @@ export default function AppShell({ defaultTab }) {
     case "home":
       return <HomeView />;
     case "workout":
-      return <WorkoutActive />;
+      return (
+        <Suspense fallback={<ViewFallback />}>
+          <WorkoutActive />
+        </Suspense>
+      );
     case "stats":
       return (
         <Suspense fallback={<ViewFallback />}>

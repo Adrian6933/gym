@@ -3,6 +3,10 @@ import MobileLayout from '../layouts/MobileLayout.astro';
 import AppShell from '../components/AppShell.jsx';
 ---
 
-<MobileLayout title="FitPulse — Entrenar">
+<MobileLayout
+  title="FitPulse — Entrenar"
+  description="Panel de entrenamiento en vivo: series, repeticiones y temporizador de descanso."
+  noindex={true}
+>
   <AppShell defaultTab="workout" client:only="react" />
 </MobileLayout>

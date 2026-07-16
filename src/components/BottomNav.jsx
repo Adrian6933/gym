@@ -1,26 +1,46 @@
 import React from "react";
 import { Home, Dumbbell, BarChart3, Clock, Settings } from "lucide-react";
+import { useGymStore } from "../store/useGymStore";
 
 const tabs = [
-  { id: "home", label: "Inicio", icon: Home, href: "/" },
-  { id: "workout", label: "Entrenar", icon: Dumbbell, href: "/workout" },
-  { id: "stats", label: "Stats", icon: BarChart3, href: "/stats" },
-  { id: "history", label: "Historial", icon: Clock, href: "/history" },
-  { id: "settings", label: "Ajustes", icon: Settings, href: "/settings" },
+  { id: "home", label: "Inicio", title: "FitPulse — Inicio", icon: Home, href: "/" },
+  { id: "workout", label: "Entrenar", title: "FitPulse — Entrenar", icon: Dumbbell, href: "/workout" },
+  { id: "stats", label: "Stats", title: "FitPulse — Estadísticas", icon: BarChart3, href: "/stats" },
+  { id: "history", label: "Historial", title: "FitPulse — Historial", icon: Clock, href: "/history" },
+  { id: "settings", label: "Ajustes", title: "FitPulse — Ajustes", icon: Settings, href: "/settings" },
 ];
 
 export default function BottomNav() {
+  const activeTab = useGymStore((s) => s.activeTab);
+  const setActiveTab = useGymStore((s) => s.setActiveTab);
+
   const currentPath =
     typeof window !== "undefined" ? window.location.pathname : "/";
 
-  const isActive = (href) => {
-    if (href === "/") return currentPath === "/";
-    return currentPath.startsWith(href);
+  const isActive = (tab) => {
+    if (activeTab) return tab.id === activeTab;
+    if (tab.href === "/") return currentPath === "/";
+    return currentPath.startsWith(tab.href);
+  };
+
+  // Navegación SPA: cambia la vista vía estado global (AppShell) sin recargar
+  // la página ni reinicializar la sesión de Supabase. El botón atrás sigue
+  // funcionando gracias al listener de popstate en AppInitializer.
+  const handleNav = (e, tab) => {
+    // Respetar aperturas en nueva pestaña / ventana
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+    e.preventDefault();
+    if (window.location.pathname !== tab.href) {
+      window.history.pushState({}, "", tab.href);
+    }
+    document.title = tab.title;
+    setActiveTab(tab.id);
+    window.scrollTo(0, 0);
   };
 
   const activeIndex = Math.max(
     0,
-    tabs.findIndex((t) => isActive(t.href)),
+    tabs.findIndex((t) => isActive(t)),
   );
 
   return (
@@ -40,12 +60,14 @@ export default function BottomNav() {
 
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const active = isActive(tab.href);
+            const active = isActive(tab);
             return (
               <a
                 key={tab.id}
                 href={tab.href}
+                onClick={(e) => handleNav(e, tab)}
                 aria-label={tab.label}
+                aria-current={active ? "page" : undefined}
                 title={tab.label}
                 className={`relative flex items-center justify-center w-full h-full transition-all duration-300 z-10 ${
                   active ? "text-[var(--accent-color)]" : "text-slate-500"

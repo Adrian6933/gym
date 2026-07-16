@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   useGymStore,
   getExerciseCalories,
@@ -23,11 +23,66 @@ export default function RoutineEditor({ routineId, onBack }) {
     addExerciseToRoutine,
     removeExerciseFromRoutine,
     updateExerciseInRoutine,
+    reorderExercises,
     settings,
   } = useGymStore();
   const routine = routines.find((r) => r.id === routineId);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [expandedExercise, setExpandedExercise] = useState(null);
+
+  // === Drag & drop de ejercicios (mobile-first, pointer events) ===
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const cardRefs = useRef([]);
+  const pointerY = useRef(0);
+
+  const handlePointerDown = useCallback(
+    (e, idx) => {
+      // Solo botón principal/touch
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
+      pointerY.current = e.clientY;
+      setDragIndex(idx);
+      setDragOverIndex(idx);
+      const move = (ev) => {
+        pointerY.current = ev.clientY;
+        // Determinar sobre qué tarjeta está el puntero
+        let target = null;
+        for (let i = 0; i < cardRefs.current.length; i++) {
+          const el = cardRefs.current[i];
+          if (!el) continue;
+          const rect = el.getBoundingClientRect();
+          if (ev.clientY >= rect.top && ev.clientY <= rect.bottom) {
+            target = i;
+            break;
+          }
+        }
+        setDragOverIndex(target);
+      };
+      const up = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+        setDragIndex((curDrag) => {
+          setDragOverIndex((curOver) => {
+            if (
+              curDrag !== null &&
+              curOver !== null &&
+              curDrag !== curOver
+            ) {
+              reorderExercises(routineId, curDrag, curOver);
+            }
+            return null;
+          });
+          return null;
+        });
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
+    },
+    [routineId, reorderExercises],
+  );
 
   if (!routine) return null;
 
@@ -107,20 +162,48 @@ export default function RoutineEditor({ routineId, onBack }) {
 
           {routine.exercises.map((ex, idx) => {
             const kcal = getExerciseCalories(ex, settings?.restDuration || 90);
+            const isDragging = dragIndex === idx;
+            const isDragOver = dragOverIndex === idx && dragIndex !== idx;
             return (
               <div
                 key={`${ex.id}-${idx}`}
-                className="gradient-card rounded-2xl overflow-hidden animate-slide-up"
+                ref={(el) => (cardRefs.current[idx] = el)}
+                className={`gradient-card rounded-2xl overflow-hidden animate-slide-up transition-all ${
+                  isDragging
+                    ? "opacity-50 scale-[0.98] ring-2 ring-lime-500/60"
+                    : isDragOver
+                      ? "ring-2 ring-lime-500/30 -translate-y-0.5"
+                      : ""
+                }`}
               >
                 {/* Exercise header */}
                 <button
                   onClick={() => toggleExpand(idx)}
                   className="w-full flex items-center gap-3 p-4 text-left press-scale"
                 >
-                  <GripVertical
-                    size={16}
-                    className="text-slate-700 flex-shrink-0"
-                  />
+                  <span
+                    onPointerDown={(e) => handlePointerDown(e, idx)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowUp" && idx > 0) {
+                        e.preventDefault();
+                        reorderExercises(routineId, idx, idx - 1);
+                      } else if (
+                        e.key === "ArrowDown" &&
+                        idx < routine.exercises.length - 1
+                      ) {
+                        e.preventDefault();
+                        reorderExercises(routineId, idx, idx + 1);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Reordenar ${ex.name}. Usa flechas arriba y abajo para moverlo.`}
+                    className="touch-none cursor-grab active:cursor-grabbing flex-shrink-0 p-1 -m-1 rounded-lg text-slate-700 hover:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-lime-500/50"
+                    title="Arrastra para reordenar (o flechas ↓↑ con teclado)"
+                  >
+                    <GripVertical size={16} />
+                  </span>
                   <div
                     className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{

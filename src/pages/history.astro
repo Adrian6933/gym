@@ -1,8 +1,12 @@
 ---
 import MobileLayout from '../layouts/MobileLayout.astro';
-import HistoryView from '../components/HistoryView.jsx';
+import AppShell from '../components/AppShell.jsx';
 ---
 
-<MobileLayout title="FitPulse — Historial">
-  <HistoryView client:only="react" />
+<MobileLayout
+  title="FitPulse — Historial"
+  description="Historial completo de tus entrenamientos con volumen total y series realizadas."
+  noindex={true}
+>
+  <AppShell defaultTab="history" client:only="react" />
 </MobileLayout>

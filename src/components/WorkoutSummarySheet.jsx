@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
-import { Clock, Dumbbell, Flame, Trophy, Zap, TrendingUp } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Clock, Dumbbell, Flame, Trophy, Zap, TrendingUp, Share2 } from "lucide-react";
+import { shareWorkoutSummary } from "../utils/shareWorkoutImage";
 
 // Confeti en canvas para celebrar el final del entreno
 function CelebrationConfetti({ active }) {
@@ -105,6 +106,8 @@ export default function WorkoutSummarySheet({
   summary,
   onClose,
 }) {
+  const [isSharing, setIsSharing] = useState(false);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
@@ -136,6 +139,18 @@ export default function WorkoutSummarySheet({
       : `${durationSecs}s`;
 
   const isNewPR = prsBeaten > 0;
+
+  const handleShare = async () => {
+    if (isSharing) return;
+    setIsSharing(true);
+    try {
+      await shareWorkoutSummary(summary);
+    } catch (err) {
+      console.error("Error al compartir resumen:", err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   return (
     <>
@@ -274,6 +289,14 @@ export default function WorkoutSummarySheet({
               className="flex-1 py-4 rounded-2xl bg-slate-800 text-slate-300 font-bold text-sm uppercase tracking-wider press-scale"
             >
               Cerrar
+            </button>
+            <button
+              onClick={handleShare}
+              disabled={isSharing}
+              className="px-5 py-4 rounded-2xl bg-slate-800/80 border border-[rgba(var(--accent-color-rgb),0.25)] text-[var(--accent-color)] font-black text-sm uppercase tracking-wider press-scale disabled:opacity-50 flex items-center justify-center"
+              title="Compartir resumen como imagen"
+            >
+              <Share2 size={18} />
             </button>
             <a
               href="/history"

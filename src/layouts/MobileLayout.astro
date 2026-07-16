@@ -8,12 +8,17 @@ interface Props {
   title: string;
   hideNav?: boolean;
   description?: string;
+  noindex?: boolean;
+  /** Página estática sin app: no monta AppInitializer (evita el redirect a /login) */
+  noApp?: boolean;
 }
 
 const {
   title,
   hideNav = false,
   description = 'FitPulse — Tu entrenador personal de bolsillo. Gestiona rutinas, sigue tu progreso y alcanza tus metas.',
+  noindex = false,
+  noApp = false,
 } = Astro.props;
 const path = Astro.url.pathname;
 const canonicalURL = new URL(path, Astro.site);
@@ -30,8 +35,10 @@ else if (path === '/history') bgClass = 'bg-page-stats';
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={description} />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0a0f" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FitPulse" />
@@ -41,14 +48,8 @@ else if (path === '/history') bgClass = 'bg-page-stats';
     <meta name="generator" content={Astro.generator} />
     <link rel="canonical" href={canonicalURL} />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-    />
-
     <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_ES" />
     <meta property="og:site_name" content="FitPulse" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -62,9 +63,9 @@ else if (path === '/history') bgClass = 'bg-page-stats';
     <title>{title}</title>
   </head>
   <body class={`min-h-[100dvh] flex flex-col ${hideNav ? '' : 'pb-24'} ${bgClass}`}>
-    <AppInitializer client:only="react" />
-    <Toast client:only="react" />
-    <OfflineIndicator client:only="react" />
+    {!noApp && <AppInitializer client:only="react" />}
+    {!noApp && <Toast client:only="react" />}
+    {!noApp && <OfflineIndicator client:only="react" />}
     <main class={`flex-1 w-full relative overflow-x-hidden ${hideNav ? '' : 'safe-top'}`}>
       <slot />
     </main>

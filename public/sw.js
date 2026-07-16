@@ -1,4 +1,4 @@
-const CACHE_VERSION = "fitpulse-v1";
+const CACHE_VERSION = "fitpulse-v2";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -35,10 +35,25 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Navegación: red primero, cae a shell cacheado si offline
+  // Navegación: red primero (guardando copia fresca), cae a la página
+  // cacheada — o al shell raíz — si estamos offline
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => caches.match("/")),
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches
+              .open(SHELL_CACHE)
+              .then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches
+            .match(request)
+            .then((cached) => cached || caches.match("/")),
+        ),
     );
     return;
   }

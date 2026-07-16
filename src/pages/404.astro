@@ -1,0 +1,27 @@
+---
+import MobileLayout from '../layouts/MobileLayout.astro';
+---
+
+<MobileLayout
+  title="FitPulse — Página no encontrada"
+  description="La página que buscas no existe."
+  noindex={true}
+  hideNav={true}
+  noApp={true}
+>
+  <div class="min-h-[100dvh] flex flex-col items-center justify-center px-6 text-center">
+    <p class="text-7xl font-black text-lime-500 mb-4">404</p>
+    <h1 class="text-2xl font-black tracking-tight text-slate-100 mb-2">
+      Página no encontrada
+    </h1>
+    <p class="text-slate-400 text-sm leading-relaxed max-w-[280px] mb-8">
+      La página que buscas no existe o ha cambiado de sitio.
+    </p>
+    <a
+      href="/"
+      class="py-4 px-8 rounded-2xl gradient-lime-btn text-slate-950 font-bold text-[15px] press-scale shadow-xl shadow-lime-500/20"
+    >
+      Volver al inicio
+    </a>
+  </div>
+</MobileLayout>
