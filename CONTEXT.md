@@ -22,7 +22,7 @@ A continuación se detalla la función de cada archivo en el proyecto bajo `src/
 ```text
 src/
 ├── data/
-│   └── exercises.js          # Catálogo estático de ejercicios clasificados por grupo muscular, tipos (reps/tiempo) y colores HSL.
+│   └── exercises.js          # Catálogo de 38 ejercicios con descripción, pasos de ejecución, consejos, dificultad y equipamiento. Colores por grupo muscular.
 ├── db/
 │   └── supabase.js           # Inicialización del cliente de Supabase con fallback de variables de entorno.
 ├── layouts/
@@ -45,8 +45,10 @@ src/
     ├── GoogleLogin.jsx       # Interfaz de inicio de sesión con Google OAuth mediante Supabase.
     ├── RoutineManager.jsx    # Dashboard de rutinas con CRUD rápido, tarjetas dinámicas y banner de sesión activa.
     ├── RoutineEditor.jsx     # Editor interactivo y detallado de rutinas (agregar/quitar ejercicios, series, reps, peso/tiempo).
-    ├── ExerciseSelector.jsx  # Selector de ejercicios modal filtrado por grupo muscular.
-    ├── WorkoutActive.jsx     # Panel de entrenamiento en ejecución (cronómetro, series, descanso circular con haptic feedback).
+    ├── ExerciseSelector.jsx  # Selector de ejercicios modal con fotos, badges de dificultad y acceso directo a ficha técnica.
+    ├── ExerciseDetail.jsx    # Ficha técnica completa: foto hero, figura anatómica, pasos de ejecución y consejos.
+    ├── BodyFigure.jsx        # Figura anatómica SVG (frontal/dorsal) con resaltado por grupo muscular. Reemplaza las imágenes webp de músculos.
+    ├── WorkoutActive.jsx     # Panel de entrenamiento en ejecución con figura muscular de fondo y botón "¿cómo se hace?".
     ├── Timer.jsx             # Temporizador de descanso en pantalla completa con controles rápidos.
     ├── HistoryView.jsx       # Historial de entrenamientos con desglose de volumen total y series.
     ├── StatsView.jsx         # Gráficas semanales, calendario de consistencia mensual, PRs y resúmenes de rendimiento.

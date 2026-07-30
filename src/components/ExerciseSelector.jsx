@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Search, X, Plus, Clock, Repeat, TrendingUp } from "lucide-react";
-import { EXERCISE_DB, MUSCLE_GROUPS, MUSCLE_COLORS } from "../data/exercises";
+import { EXERCISE_DB, MUSCLE_GROUPS, MUSCLE_COLORS, DIFFICULTY_COLORS } from "../data/exercises";
 import ExerciseHistory from "./ExerciseHistory";
+import ExerciseDetail from "./ExerciseDetail";
 
 export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
   const [search, setSearch] = useState("");
@@ -11,15 +12,19 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
   const [customMuscle, setCustomMuscle] = useState("Pecho");
   const [customType, setCustomType] = useState("reps");
   const [historyExercise, setHistoryExercise] = useState(null);
+  const [detailExercise, setDetailExercise] = useState(null);
 
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (detailExercise) setDetailExercise(null);
+        else onClose();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, detailExercise]);
 
   if (!isOpen) return null;
 
@@ -65,7 +70,12 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
 
         {/* Header */}
         <div className="flex justify-between items-center px-5 py-3">
-          <h2 className="text-xl font-bold text-slate-100">Añadir Ejercicio</h2>
+          <div>
+            <h2 className="text-xl font-bold text-slate-100">Añadir Ejercicio</h2>
+            <p className="text-[11px] text-slate-500 font-medium">
+              Toca un ejercicio para ver cómo se hace
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="w-9 h-9 flex items-center justify-center bg-slate-800/80 rounded-full text-slate-400 active:scale-90 transition-transform"
@@ -94,19 +104,29 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
         {/* Muscle filter chips */}
         <div className="px-4 pb-3 flex-shrink-0">
           <div className="flex overflow-x-auto gap-2 pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {MUSCLE_GROUPS.map((m) => (
-              <button
-                key={m}
-                onClick={() => setFilter(m)}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap text-[13px] font-bold transition-all press-scale ${
-                  filter === m
-                    ? "bg-lime-500 text-slate-950 shadow-md shadow-lime-500/20"
-                    : "bg-slate-800/60 text-slate-400"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
+            {MUSCLE_GROUPS.map((m) => {
+              const chipColor = MUSCLE_COLORS[m];
+              const active = filter === m;
+              return (
+                <button
+                  key={m}
+                  onClick={() => setFilter(m)}
+                  className={`px-4 py-2 rounded-xl whitespace-nowrap text-[13px] font-bold transition-all press-scale flex items-center gap-1.5 ${
+                    active
+                      ? "bg-lime-500 text-slate-950 shadow-md shadow-lime-500/20"
+                      : "bg-slate-800/60 text-slate-400"
+                  }`}
+                >
+                  {chipColor && (
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: active ? "#0a0a0f" : chipColor }}
+                    />
+                  )}
+                  {m}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -115,18 +135,17 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
           {filtered.map((ex) => (
             <div
               key={ex.id}
-              className="gradient-card p-4 rounded-2xl flex items-center gap-3.5 group"
+              className="gradient-card p-3 rounded-2xl flex items-center gap-3 group"
             >
+              {/* Fila principal: abre la ficha de detalle */}
               <button
-                onClick={() => {
-                  onSelect(ex);
-                  onClose();
-                }}
-                className="flex items-center gap-3.5 flex-1 min-w-0 press-scale text-left"
+                onClick={() => setDetailExercise(ex)}
+                className="flex items-center gap-3 flex-1 min-w-0 press-scale text-left"
+                title="Ver cómo se hace"
               >
                 {/* Foto o icono SVG */}
                 <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+                  className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-white/5"
                   style={{ backgroundColor: `${MUSCLE_COLORS[ex.muscle]}15` }}
                 >
                   {ex.image ? (
@@ -139,8 +158,8 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
                     />
                   ) : (
                     <svg
-                      width="22"
-                      height="22"
+                      width="24"
+                      height="24"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke={MUSCLE_COLORS[ex.muscle]}
@@ -157,7 +176,7 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
                   <p className="text-[15px] font-semibold text-slate-200 truncate">
                     {ex.name}
                   </p>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                     <span
                       className="text-[11px] font-bold uppercase tracking-wider"
                       style={{ color: MUSCLE_COLORS[ex.muscle] }}
@@ -173,6 +192,19 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
                       )}
                       {ex.type === "time" ? "Tiempo" : "Reps"}
                     </span>
+                    {ex.difficulty && (
+                      <>
+                        <span className="text-slate-700">·</span>
+                        <span
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: DIFFICULTY_COLORS[ex.difficulty] }}
+                          title={ex.difficulty}
+                        />
+                        <span className="text-[11px] text-slate-500">
+                          {ex.difficulty}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </button>
@@ -188,9 +220,18 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
                 <TrendingUp size={14} />
               </button>
 
-              <div className="w-8 h-8 rounded-lg bg-slate-800/80 flex items-center justify-center text-lime-500 flex-shrink-0">
-                <Plus size={16} strokeWidth={3} />
-              </div>
+              {/* Añadir directo */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect(ex);
+                  onClose();
+                }}
+                className="w-10 h-10 rounded-xl gradient-lime-btn flex items-center justify-center text-slate-950 flex-shrink-0 press-scale shadow-md shadow-lime-500/20"
+                title="Añadir a la rutina"
+              >
+                <Plus size={18} strokeWidth={3} />
+              </button>
             </div>
           ))}
 
@@ -266,6 +307,12 @@ export default function ExerciseSelector({ isOpen, onClose, onSelect }) {
         exercise={historyExercise}
         isOpen={!!historyExercise}
         onClose={() => setHistoryExercise(null)}
+      />
+
+      <ExerciseDetail
+        exercise={detailExercise}
+        isOpen={!!detailExercise}
+        onClose={() => setDetailExercise(null)}
       />
     </div>
   );

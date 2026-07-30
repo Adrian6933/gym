@@ -13,9 +13,11 @@ import {
   GripVertical,
   ChevronDown,
   ChevronUp,
+  Info,
 } from "lucide-react";
 import ExerciseSelector from "./ExerciseSelector";
-import { MUSCLE_COLORS } from "../data/exercises";
+import ExerciseDetail from "./ExerciseDetail";
+import { MUSCLE_COLORS, EXERCISE_DB } from "../data/exercises";
 
 export default function RoutineEditor({ routineId, onBack }) {
   const {
@@ -29,6 +31,7 @@ export default function RoutineEditor({ routineId, onBack }) {
   const routine = routines.find((r) => r.id === routineId);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [expandedExercise, setExpandedExercise] = useState(null);
+  const [detailExercise, setDetailExercise] = useState(null);
 
   // === Drag & drop de ejercicios (mobile-first, pointer events) ===
   const [dragIndex, setDragIndex] = useState(null);
@@ -204,32 +207,46 @@ export default function RoutineEditor({ routineId, onBack }) {
                   >
                     <GripVertical size={16} />
                   </span>
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{
-                      backgroundColor: MUSCLE_COLORS[ex.muscle]
-                        ? `${MUSCLE_COLORS[ex.muscle]}15`
-                        : "rgba(var(--accent-color-rgb), 0.15)",
-                    }}
-                  >
-                    {ex.type === "time" ? (
-                      <Clock
-                        size={16}
-                        style={{
-                          color:
-                            MUSCLE_COLORS[ex.muscle] || "var(--accent-color)",
-                        }}
+                  {(() => {
+                    const catalog = EXERCISE_DB.find((e) => e.id === ex.id);
+                    const img = catalog?.image || ex.image;
+                    return img ? (
+                      <img
+                        src={img}
+                        alt={ex.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-white/5"
                       />
                     ) : (
-                      <Repeat
-                        size={16}
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{
-                          color:
-                            MUSCLE_COLORS[ex.muscle] || "var(--accent-color)",
+                          backgroundColor: MUSCLE_COLORS[ex.muscle]
+                            ? `${MUSCLE_COLORS[ex.muscle]}15`
+                            : "rgba(var(--accent-color-rgb), 0.15)",
                         }}
-                      />
-                    )}
-                  </div>
+                      >
+                        {ex.type === "time" ? (
+                          <Clock
+                            size={16}
+                            style={{
+                              color:
+                                MUSCLE_COLORS[ex.muscle] || "var(--accent-color)",
+                            }}
+                          />
+                        ) : (
+                          <Repeat
+                            size={16}
+                            style={{
+                              color:
+                                MUSCLE_COLORS[ex.muscle] || "var(--accent-color)",
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-200 truncate">
                       {ex.name}
@@ -425,6 +442,20 @@ export default function RoutineEditor({ routineId, onBack }) {
                       </div>
                     </div>
 
+                    {/* Ver técnica */}
+                    {EXERCISE_DB.some((e) => e.id === ex.id) && (
+                      <button
+                        onClick={() =>
+                          setDetailExercise(
+                            EXERCISE_DB.find((e) => e.id === ex.id),
+                          )
+                        }
+                        className="w-full py-2.5 rounded-xl bg-slate-800/60 text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 press-scale"
+                      >
+                        <Info size={14} /> Ver cómo se hace
+                      </button>
+                    )}
+
                     {/* Remove */}
                     <button
                       onClick={() => {
@@ -456,6 +487,12 @@ export default function RoutineEditor({ routineId, onBack }) {
         isOpen={selectorOpen}
         onClose={() => setSelectorOpen(false)}
         onSelect={handleAddExercise}
+      />
+
+      <ExerciseDetail
+        exercise={detailExercise}
+        isOpen={!!detailExercise}
+        onClose={() => setDetailExercise(null)}
       />
     </>
   );

@@ -141,15 +141,20 @@ export default function ExerciseHistory({ exercise, isOpen, onClose }) {
   const [period, setPeriod] = useState("3m");
   const [activeTab, setActiveTab] = useState("summary");
 
+  const exerciseId = exercise?.id;
+  const exerciseName = exercise?.name;
+  const exerciseMuscle = exercise?.muscle;
+
   const periodDays = { "1m": 30, "3m": 90, "6m": 180, "1y": 365, "all": null };
   const cutoffTs = periodDays[period] ? Date.now() - periodDays[period] * 86400000 : 0;
 
   const allLogs = useMemo(() => {
+    if (!exerciseId) return [];
     const logs = [];
     history.forEach((w) => {
       if (cutoffTs && w.endTime < cutoffTs) return;
       w.exercises?.forEach((ex) => {
-        if (ex.id !== exercise.id) return;
+        if (ex.id !== exerciseId) return;
         const completedSets = (ex.sets || []).filter((s) => s.completed);
         if (completedSets.length === 0) return;
         const maxW = Math.max(...completedSets.map((s) => parseFloat(s.weight) || 0));
@@ -175,10 +180,10 @@ export default function ExerciseHistory({ exercise, isOpen, onClose }) {
       });
     });
     return logs.sort((a, b) => a.date - b.date);
-  }, [history, exercise.id, cutoffTs]);
+  }, [history, exerciseId, cutoffTs]);
 
   const stats = useMemo(() => {
-    if (allLogs.length === 0) {
+    if (allLogs.length === 0 || !exerciseName) {
       return {
         maxWeight: 0,
         maxReps: 0,
@@ -194,7 +199,7 @@ export default function ExerciseHistory({ exercise, isOpen, onClose }) {
     const maxR = Math.max(...allLogs.map((l) => l.maxReps));
     const top1RM = Math.max(...allLogs.map((l) => l.topSet1RM));
     const totalVol = allLogs.reduce((acc, l) => acc + l.totalVolume, 0);
-    const strength = getStrengthLevel(exercise.name, maxW, settings?.gender || "male");
+    const strength = getStrengthLevel(exerciseName, maxW, settings?.gender || "male");
     return {
       maxWeight: maxW,
       maxReps: maxR,
@@ -205,13 +210,13 @@ export default function ExerciseHistory({ exercise, isOpen, onClose }) {
       lastDate: allLogs[allLogs.length - 1].date,
       strengthLevel: strength,
     };
-  }, [allLogs, exercise.name, settings?.gender]);
+  }, [allLogs, exerciseName, settings?.gender]);
 
   const weightData = allLogs.map((l) => ({ value: l.maxWeight, label: l.dateStr }));
   const volumeData = allLogs.map((l) => ({ value: l.totalVolume, label: l.dateStr }));
   const oneRmData = allLogs.map((l) => ({ value: l.topSet1RM, label: l.dateStr }));
 
-  const color = MUSCLE_COLORS[exercise.muscle] || "var(--accent-color)";
+  const color = MUSCLE_COLORS[exerciseMuscle] || "var(--accent-color)";
 
   useEffect(() => {
     if (!isOpen) return;

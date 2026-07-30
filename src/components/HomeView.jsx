@@ -6,7 +6,7 @@ import {
   getWeeklyConsistency,
   getWeeklyStats,
 } from "../store/useGymStore";
-import { ChevronRight, Calendar, Trophy, Zap, Activity } from "lucide-react";
+import { ChevronRight, Calendar, Trophy, Zap, Activity, Sun, Moon, MoonStar } from "lucide-react";
 import ProfileHeader from "./ProfileHeader";
 import BottomNav from "./BottomNav";
 
@@ -104,10 +104,11 @@ export default function HomeView() {
           {/* Toggle Button */}
           <button
             onClick={toggleThemeMode}
-            className="w-10 h-10 rounded-xl bg-slate-800/60 border border-white/5 flex items-center justify-center text-sm press-scale mt-1 shadow-md"
+            className="w-10 h-10 rounded-xl bg-slate-800/60 border border-white/5 flex items-center justify-center press-scale mt-1 shadow-md text-[var(--accent-color)]"
             title="Cambiar modo de pantalla"
+            aria-label="Cambiar modo de pantalla"
           >
-            {themeMode === "light" ? "☀️" : themeMode === "amoled" ? "🕶️" : "🌙"}
+            {themeMode === "light" ? <Sun size={17} /> : themeMode === "amoled" ? <MoonStar size={17} /> : <Moon size={17} />}
           </button>
         </div>
 

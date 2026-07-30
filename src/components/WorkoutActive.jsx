@@ -5,6 +5,7 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  Info,
 } from "lucide-react";
 import Timer from "./Timer";
 import ExerciseSelector from "./ExerciseSelector";
@@ -12,8 +13,10 @@ import RoutineManager from "./RoutineManager";
 import WorkoutSummarySheet from "./WorkoutSummarySheet";
 import OneRMCalculator from "./OneRMCalculator";
 import ConfirmDialog from "./ConfirmDialog";
+import ExerciseDetail from "./ExerciseDetail";
+import BodyFigure from "./BodyFigure";
 import { useToast } from "./Toast";
-import { MUSCLE_COLORS, MUSCLE_IMAGES } from "../data/exercises";
+import { MUSCLE_COLORS, EXERCISE_DB } from "../data/exercises";
 import PRConfetti from "./workout/PRConfetti";
 import ExerciseTimerMode from "./workout/ExerciseTimerMode";
 import ExerciseRepsMode from "./workout/ExerciseRepsMode";
@@ -51,6 +54,8 @@ export default function WorkoutActive() {
 
   // Resumen de entrenamiento finalizado
   const [summary, setSummary] = useState(null);
+  // Ficha técnica del ejercicio actual ("¿cómo se hace?")
+  const [detailOpen, setDetailOpen] = useState(false);
   const toast = useToast();
 
   // Elapsed time counter
@@ -376,17 +381,9 @@ export default function WorkoutActive() {
         {/* Current exercise */}
         <div className="flex-1 px-4">
           <div className="gradient-card rounded-2xl overflow-hidden relative min-h-[360px] flex flex-col justify-between">
-            {/* Muscle illustration background */}
-            <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.06] blur-[2px] select-none p-6">
-              {MUSCLE_IMAGES[currentEx.muscle] && (
-                <img
-                  src={MUSCLE_IMAGES[currentEx.muscle]}
-                  alt={currentEx.muscle}
-                  loading="lazy"
-                  decoding="async"
-                  className="max-h-[260px] max-w-[260px] object-contain animate-pulse"
-                />
-              )}
+            {/* Figura anatómica de fondo con el músculo resaltado */}
+            <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.10] select-none">
+              <BodyFigure muscle={currentEx.muscle} width={300} glow={false} />
             </div>
 
             {/* Exercise title */}
@@ -424,6 +421,14 @@ export default function WorkoutActive() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setDetailOpen(true)}
+                    className="w-9 h-9 rounded-xl bg-slate-800/80 flex items-center justify-center text-slate-400 press-scale hover:text-[var(--accent-color)] hover:bg-[var(--accent-color)]/10 transition-colors"
+                    title="¿Cómo se hace?"
+                    aria-label="Ver cómo se hace el ejercicio"
+                  >
+                    <Info size={16} />
+                  </button>
                   {currentEx.type !== "time" && (
                     <button
                       onClick={() => setOneRMOpen(true)}
@@ -529,6 +534,15 @@ export default function WorkoutActive() {
         isOpen={selectorOpen}
         onClose={() => setSelectorOpen(false)}
         onSelect={handleAddExercise}
+      />
+
+      {/* Ficha técnica del ejercicio actual (busca datos completos en el catálogo) */}
+      <ExerciseDetail
+        exercise={
+          EXERCISE_DB.find((e) => e.id === currentEx.id) || currentEx
+        }
+        isOpen={detailOpen}
+        onClose={() => setDetailOpen(false)}
       />
 
       <ConfirmDialog
